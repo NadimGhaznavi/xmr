@@ -1,4 +1,5 @@
-ta/xmr-earnings.csv", function(data) {
+// Load data from a CSV file
+d3.csv("/data/xmr-earnings.csv", function(data) {
   // Convert strings to numbers
 data.forEach(function(d) {
     d.Total = +d.Total;
