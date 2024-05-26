@@ -1,4 +1,4 @@
-d3.csv("../_data/xmr-earnings.csv", function(data) {
+d3.csv("/_data/xmr-earnings.csv", function(data) {
   // Convert the 'Amount' and 'Total' columns to numbers
 data.forEach(function(d) {
     d.Amount = +d.Amount;
