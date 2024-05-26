@@ -12,11 +12,11 @@ console.log(data); // Log the data to verify its structure
     .attr("height", 800);
 
   var x = d3.scaleTime()
-    .domain(d3.extent(data, function(d) { return new Date(d.Date); }))
+    .domain(d3.extent(data.filter(d => d.Date && d.Total), function(d) { return new Date(d.Date); }))
     .range([0, 800]);
 
   var y = d3.scaleLinear()
-    .domain(d3.extent(data, function(d) { return d.Total; }))
+    .domain(d3.extent(data.filter(d => d.Date && d.Total), function(d) { return d.Total; }))
     .range([0, 800]);
 
   var xAxis = d3.axisBottom(x).tickFormat(d3.timeFormat("%m/%d"));
