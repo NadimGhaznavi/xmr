@@ -1,52 +1,64 @@
-// Static data
-const data = [
-  { Date: new Date("2024-03-21"), Total: 0.012802020866 },
-  { Date: new Date("2024-03-22"), Total: 0.012802020866 },
-  // ... Add more data points here ...
-];
+chart = {
 
-// Create SVG element
-const chart = d3.select("#chart")
-  .append("svg")
-  .attr("width", 800)
-  .attr("height", 800)
-  .attr("viewBox", "0 0 800 800");
+// Load data from a CSV file
+d3.text("/data/xmr-earnings.csv", function(text) {
+  const data = d3.csvParseRows(text);
+  const columns = d3.csvParseRows(text, function(d) {
+    return d.Total = +d.Total;
+  });
 
-// Create x-axis scale
-const x = d3.scaleTime()
-  .domain(d3.extent(data, d => d.Date))
-  .range([0, 800]);
+  // Declare the chart dimensions and margins.
+  const width = 800;
+  const height = 800;
+  const marginTop = 20;
+  const marginRight = 30;
+  const marginBottom = 30;
+  const marginLeft = 40;
 
-// Create y-axis scale
-const y = d3.scaleLinear()
-  .domain(d3.extent(data, d => d.Total))
-  .range([0, 800]);
+  // Declare the x (horizontal position) scale.
+  const x = d3.scaleUtc(d3.extent(aapl, d => d.date), [marginLeft, width - marginRight]);
 
-// Generate x-axis
-const xAxis = d3.axisBottom(x).tickFormat(d3.timeFormat("%m/%d"));
+  // Declare the y (vertical position) scale.
+  const y = d3.scaleLinear([0, d3.max(aapl, d => d.close)], [height - marginBottom, marginTop]);
 
-// Generate y-axis
-const yAxis = d3.axisLeft(y);
+  // Declare the line generator.
+  const line = d3.line()
+      .x(d => x(d.date))
+      .y(d => y(d.close));
 
-// Add x-axis to SVG
-chart.append("g")
-  .attr("transform", "translate(0," + 400 + ")")
-  .call(xAxis);
+  // Create the SVG container.
+  const svg = d3.create("svg")
+      .attr("width", width)
+      .attr("height", height)
+      .attr("viewBox", [0, 0, width, height])
+      .attr("style", "max-width: 100%; height: auto; height: intrinsic;");
 
-// Add y-axis to SVG
-chart.append("g")
-  .attr("transform", "translate(0,0)")
-  .call(yAxis);
+  // Add the x-axis.
+  svg.append("g")
+      .attr("transform", `translate(0,${height - marginBottom})`)
+      .call(d3.axisBottom(x).ticks(width / 80).tickSizeOuter(0));
 
-// Create line generator
-const line = d3.line()
-  .x(d => x(d.Date))
-  .y(d => y(d.Total));
+  // Add the y-axis, remove the domain line, add grid lines and a label.
+  svg.append("g")
+      .attr("transform", `translate(${marginLeft},0)`)
+      .call(d3.axisLeft(y).ticks(height / 40))
+      .call(g => g.select(".domain").remove())
+      .call(g => g.selectAll(".tick line").clone()
+          .attr("x2", width - marginLeft - marginRight)
+          .attr("stroke-opacity", 0.1))
+      .call(g => g.append("text")
+          .attr("x", -marginLeft)
+          .attr("y", 10)
+          .attr("fill", "currentColor")
+          .attr("text-anchor", "start")
+          .text("↑ Daily close ($)"));
 
-// Add line path to SVG
-chart.append("path")
-  .datum(data)
-  .attr("fill", "none")
-  .attr("stroke", "steelblue")
-  .attr("stroke-width", 1.5)
-  .attr("d", line);
+  // Append a path for the line.
+  svg.append("path")
+      .attr("fill", "none")
+      .attr("stroke", "steelblue")
+      .attr("stroke-width", 1.5)
+      .attr("d", line(aapl));
+
+  return svg.node();
+}
