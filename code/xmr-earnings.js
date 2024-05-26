@@ -1,53 +1,52 @@
-// Load data from a CSV file
-d3.text("/data/xmr-earnings.csv", function(text) {
-  const data = d3.csvParseRows(text);
-  const columns = d3.csvParseRows(text, function(d) {
-    return d.Total = +d.Total;
-  });
-  
-  // Create SVG element
-  const chart = d3.select("#chart")
-    .append("svg")
-    .attr("width", 800)
-    .attr("height", 800)
-    .attr("viewBox", "0 0 800 800");
+// Static data
+const data = [
+  { Date: new Date("2024-03-21"), Total: 0.012802020866 },
+  { Date: new Date("2024-03-22"), Total: 0.012802020866 },
+  // ... Add more data points here ...
+];
 
-  // Create x-axis scale
-  const x = d3.scaleTime()
-    .domain(d3.extent(data, function(d) { return new Date(d.Date); }))
-    .range([0, 800]);
+// Create SVG element
+const chart = d3.select("#chart")
+  .append("svg")
+  .attr("width", 800)
+  .attr("height", 800)
+  .attr("viewBox", "0 0 800 800");
 
-  // Create y-axis scale
-  const y = d3.scaleLinear()
-    .domain(d3.extent(data, function(d) { return d.Total; }))
-    .range([0, 800]);
+// Create x-axis scale
+const x = d3.scaleTime()
+  .domain(d3.extent(data, d => d.Date))
+  .range([0, 800]);
 
-  // Generate x-axis
-  const xAxis = d3.axisBottom(x).tickFormat(d3.timeFormat("%m/%d"));
+// Create y-axis scale
+const y = d3.scaleLinear()
+  .domain(d3.extent(data, d => d.Total))
+  .range([0, 800]);
 
-  // Generate y-axis
-  const yAxis = d3.axisLeft(y);
+// Generate x-axis
+const xAxis = d3.axisBottom(x).tickFormat(d3.timeFormat("%m/%d"));
 
-  // Add x-axis to SVG
-  chart.append("g")
-    .attr("transform", "translate(0," + 400 + ")")
-    .call(xAxis);
+// Generate y-axis
+const yAxis = d3.axisLeft(y);
 
-  // Add y-axis to SVG
-  chart.append("g")
-    .attr("transform", "translate(0,0)")
-    .call(yAxis);
+// Add x-axis to SVG
+chart.append("g")
+  .attr("transform", "translate(0," + 400 + ")")
+  .call(xAxis);
 
-  // Create line generator
-  const line = d3.line()
-    .x(function(d) { return x(new Date(d.Date)); })
-    .y(function(d) { return y(d.Total); });
+// Add y-axis to SVG
+chart.append("g")
+  .attr("transform", "translate(0,0)")
+  .call(yAxis);
 
-  // Add line path to SVG
-  chart.append("path")
-    .datum(data)
-    .attr("fill", "none")
-    .attr("stroke", "steelblue")
-    .attr("stroke-width", 1.5)
-    .attr("d", line);
-});
+// Create line generator
+const line = d3.line()
+  .x(d => x(d.Date))
+  .y(d => y(d.Total));
+
+// Add line path to SVG
+chart.append("path")
+  .datum(data)
+  .attr("fill", "none")
+  .attr("stroke", "steelblue")
+  .attr("stroke-width", 1.5)
+  .attr("d", line);
