@@ -1,12 +1,5 @@
 chart = {
 
-// Load data from a CSV file
-d3.text("/data/xmr-earnings.csv", function(text) {
-  const data = d3.csvParseRows(text);
-  const columns = d3.csvParseRows(text, function(d) {
-    return d.Total = +d.Total;
-  });
-
   // Declare the chart dimensions and margins.
   const width = 800;
   const height = 800;
