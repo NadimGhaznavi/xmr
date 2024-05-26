@@ -1,8 +1,6 @@
-// Load data from a CSV file
-d3.csv("/data/xmr-earnings.csv", function(data) {
+ta/xmr-earnings.csv", function(data) {
   // Convert strings to numbers
 data.forEach(function(d) {
-    d.Amount = +d.Amount;
     d.Total = +d.Total;
   });
 
@@ -52,3 +50,4 @@ chart.append("path")
     .attr("stroke-width", 1.5)
     .attr("d", line);
 });
+
