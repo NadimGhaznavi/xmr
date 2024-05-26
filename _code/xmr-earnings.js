@@ -8,22 +8,22 @@ data.forEach(function(d) {
   // Create the chart
 var chart = d3.select("#chart")
     .append("svg")
-    .attr("width", <width>)
-    .attr("height", <height>);
+    .attr("width", 800)
+    .attr("height", 640);
 
   // Define scales
 var x = d3.scaleTime()
     .domain(d3.extent(data, function(d) { return new Date(d.Date); }))
-    .range([0, <width>]);
+    .range([0, 800]);
   var y = d3.scaleLinear()
     .domain(d3.extent(data, function(d) { return d.Total; }))
-    .range([<height>, 0]);
+    .range([640, 0]);
 
   // Create axes
 var xAxis = d3.axisBottom(x).tickFormat(d3.timeFormat("%m/%d"));
   var yAxis = d3.axisLeft(y);
   chart.append("g")
-    .attr("transform", "translate(0," + <height> + ")")
+    .attr("transform", "translate(0," + 800 + ")")
     .call(xAxis);
   chart.append("g")
     .attr("transform", "translate(0,0)")
