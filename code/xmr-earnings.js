@@ -4,6 +4,8 @@ d3.csv("/data/xmr-earnings.csv", function(data) {
     d.Total = +d.Total;
   });
 
+console.log(data); // Log the data to verify its structure 
+
   var chart = d3.select("#chart")
     .append("svg")
     .attr("width", 800)
