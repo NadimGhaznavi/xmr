@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', function(
 ) {
   var options = {
     chart: {
-      type: 'line',
+      type: 'spline',
       curve: 'smooth'
     },
     series: [{
