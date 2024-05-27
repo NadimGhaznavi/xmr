@@ -1,67 +1,72 @@
-var parseDate = d3.timeParse("%Y-%m-%d");
-var margin = {left: 50, right: 20, top: 20, bottom: 50 };
 
+
+// Define the margin and nudge objects
+var margin = {left: 50, right: 20, top: 20, bottom: 50};
+var nudge = {x: 50, y: 20};
+
+// Define the chart dimensions
 var width = 960 - margin.left - margin.right;
 var height = 500 - margin.top - margin.bottom;
 
-var max = 0;
+// Define the date parser
+var parseDate = d3.timeParse("%Y-%m-%d");
 
-var xNudge = 50;
-var yNudge = 20;
-
-var minDate = new Date();
-var maxDate = new Date();
-
+// Load and parse the CSV data
 d3.csv("/data/xmr-earnings.csv")
-  .row(function(d) { 
-    return { 
-      month: parseDate(d.month), 
-      price: Number(d.price)
-    }; 
+  .row(function(d) {
+    return {
+      date: parseDate(d.Date),
+      total: Number(d.Total)
+    };
   })
   .get(function(error, rows) {
-    if (error) {
+    // Check if an error occurred while loading the CSV file
+if (error) {
       console.error("Error loading CSV file:", error);
       return;
     }
-    console.log(rows)
-    max = d3.max(rows, function(d) { 
-      return d.price; 
-    });
-    minDate = d3.min(rows, function(d) {return d.month; });
-    maxDate = d3.max(rows, function(d) { return d.month; });
 
-    var y = d3.scaleLinear()
-    .domain([0,max])
-    .range([height,0]);
+    // Calculate the maximum total value
+var maxTotal = d3.max(rows, function(d) { return d.total; });
 
-    var x = d3.scaleTime()
-    .domain([minDate,maxDate])
-    .range([0,width]);
+    // Define the y-scale
+var y = d3.scaleLinear()
+      .domain([0, maxTotal])
+      .range([height, 0]);
 
-    var yAxis = d3.axisLeft(y);
+    // Define the x-scale
+var x = d3.scaleTime()
+      .domain(d3.extent(rows, function(d) { return d.date; }))
+      .range([0, width]);
 
-    var xAxis = d3.axisBottom(x);
+    // Create the line generator
+var line = d3.line()
+      .x(function(d) { return x(d.date); })
+      .y(function(d) { return y(d.total); })
+      .curve(d3.curveCardinal);
 
-    var line = d3.line()
-    .x(function(d){ return x(d.month); })
-    .y(function(d){ return y(d.price); })
-    .curve(d3.curveCardinal);
+    // Create the SVG element
+var svg = d3.select("body").append("svg")
+      .attr("id", "svg")
+      .attr("viewBox", "0 0 " + width + " " + height);
 
-    var svg = d3.select("body").append("svg").attr("id","svg").attr("height","100%").attr("width","100%");
-    var chartGroup = svg.append("g").attr("class","chartGroup").attr("transform","translate("+xNudge+","+yNudge+")");
+    // Create the chart group and translate it
+var chartGroup = svg.append("g").attr("class", "chartGroup")
+      .attr("transform", "translate(" + nudge.x + "," + nudge.y + ")");
 
-    chartGroup.append("path")
-    .attr("class","line")
-    .attr("d",function(d){ return line(rows); })
+    // Add the line path to the chart group
+chartGroup.append("path")
+      .attr("class", "line")
+      .attr("d", line(rows));
 
-    chartGroup.append("g")
-    .attr("class","axis x")
-    .attr("transform","translate(0,"+height+")")
-    .call(xAxis);
+    // Add the x-axis to the chart group
+chartGroup.append("g")
+      .attr("class", "xAxis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(x).tickFormat(d3.timeFormat("%m/%d/%y")));
 
-    chartGroup.append("g")
-    .attr("class","axis y")
-    .call(yAxis);
-
+    // Add the y-axis to the chart group
+chartGroup.append("g")
+      .attr("class", "yAxis")
+      .call(d3.axisLeft(y));
   });
