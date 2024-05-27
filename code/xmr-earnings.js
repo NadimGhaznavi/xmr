@@ -1,19 +1,19 @@
-document.addEventListener('DOMContentLoaded', function(
+ddEventListener('DOMContentLoaded', function(
 ) {
   var options = {
     chart: {
       type: 'line'
 },
     series: [{
-      name: 'X',
-      data: [] // Will be populated with X data
-}, {
-      name: 'R',
-      data: [] // Will be populated with R data
-}],
+      name: 'Date',
+      data: []
+    }, {
+      name: 'Total',
+      data: []
+    }],
     xaxis: {
-      categories: [] // Will be populated with your custom categories
-}
+      categories: []
+    }
   }
 
   var chart = new ApexCharts(document.querySelector("#chart"), options);
@@ -21,27 +21,19 @@ document.addEventListener('DOMContentLoaded', function(
   chart.render();
 
   d3.csv("/data/xmr-earnings.csv", function(data) {
-    // Convert data to X and R arrays
-const xData = data.map(d => d.Date);
-    const rData = [];
-    for (let i = 0; i < data.length - 1; i++) {
-      rData.push(data[i + 1].Total - data[i].Total);
-    }
+    const dateData = data.map(d => d.Date);
+    const totalData = data.map(d => d.Total);
 
-    // Extract categories from CSV data
-const categories = data.map(d => d.Date);
-
-    // Update the chart series data and redraw the chart
-chart.updateSeries([{
-      name: 'X',
-      data: xData
+    chart.updateSeries([{
+      name: 'Date',
+      data: dateData
     }, {
-      name: 'R',
-      data: rData
+      name: 'Total',
+      data: totalData
     }]);
     chart.updateOptions({
       xaxis: {
-        categories: categories
+        categories: dateData
       }
     });
   });
