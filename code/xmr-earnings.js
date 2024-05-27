@@ -14,7 +14,14 @@ document.addEventListener('DOMContentLoaded', function(
       fill: {
         colors: ['#0047b3', '#7acbee'],
         opacity: 0.5,
-        type: 'solid'
+        type: 'solid',
+        gradient: {
+          type: 'horizontal',
+          shadeIntensity: 0.5,
+          gradientToColors: ['#ff0000', '#00ff00'],
+          opacityFrom: 1,
+          opacityTo: 0.5
+	}
       },
       data: []
     }],
