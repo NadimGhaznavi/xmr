@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function(
         shadeIntensity: 1, // Set intensity of the gradient shading
         opacityFrom: 0.7, // Gradient opacity at the start
         opacityTo: 0.9, // Gradient opacity at the end
-        stops: [0, 50, 80, 100]
+        stops: [0, 90, 100]
       }
     },
     xaxis: {
