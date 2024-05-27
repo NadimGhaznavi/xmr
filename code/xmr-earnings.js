@@ -2,8 +2,9 @@ document.addEventListener('DOMContentLoaded', function(
 ) {
   var options = {
     chart: {
-      type: 'line'
-},
+      type: 'line',
+      curve: 'smooth'
+    },
     series: [{
       name: 'Total',
       data: []
