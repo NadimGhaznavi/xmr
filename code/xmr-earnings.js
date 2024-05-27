@@ -13,8 +13,8 @@ var minDate = new Date();
 var maxDate = new Date();
 
 d3.csv("/data/xmr-earnings.csv")
-    .row(function(d) { return { month: parseDate(d.month), price: Number(d.price)}; })
-    .get(function(error, rows) {
+	.row(function(d) { return { month: parseDate(d.month), price: Number(d.price)}; })
+    	.get(function(error, rows) {
 	    max = d3.max(rows, function(d) { return d.price; });
 	    minDate = d3.min(rows, function(d) {return d.month; });
 		maxDate = d3.max(rows, function(d) { return d.month; });
