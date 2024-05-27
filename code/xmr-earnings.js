@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', function(
         opacity: 0.5,
         type: 'solid'
       data: []
+      }
     }],
     xaxis: {
       categories: []
