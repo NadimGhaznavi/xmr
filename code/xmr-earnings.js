@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function(
         gradient: {
           type: 'horizontal',
           shadeIntensity: 0.5,
-          gradientToColors: ['#ff0000', '#00ff00'],
+          gradientToColors: ['#0047b3', '#7acbee'],
           opacityFrom: 1,
           opacityTo: 0.5
 	}
