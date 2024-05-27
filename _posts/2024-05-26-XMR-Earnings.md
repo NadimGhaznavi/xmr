@@ -12,7 +12,7 @@ This post showcases my XMR earnings as of May 26, 2024, using a line chart gener
 
 <div id="chart"></div>
 
-<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://d3js.org/d3.v4.min.js"></script>
 <script src="/code/xmr-earnings.js"></script>
 
 ## Notes
