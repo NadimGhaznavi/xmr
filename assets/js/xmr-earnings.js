@@ -58,7 +58,22 @@ document.addEventListener('DOMContentLoaded', function(
       tickAmount: 4
     }
   };
-  
+
+  d3.csv("/_data/xmr-earnings.csv", function(data) {
+    const dateData = data.map(d => d.Date);
+    const totalData = data.map(d => d.Total);
+
+    chart.updateSeries([{
+      name: 'Total XMR Earned',
+      data: totalData
+    }]);
+    chart.updateOptions({
+      xaxis: {
+        categories: dateData
+      }
+    });
+  });
+    
   var areaChart = new ApexCharts(document.querySelector("#chart -area"), areaOptions);
 
   areaChart.render();
@@ -115,21 +130,4 @@ var barChart = new ApexCharts(document.querySelector("#chart -bar"), barOptions)
 
 barChart.render()
 
-
-
-
-  d3.csv("/_data/xmr-earnings.csv", function(data) {
-    const dateData = data.map(d => d.Date);
-    const totalData = data.map(d => d.Total);
-
-    chart.updateSeries([{
-      name: 'Total XMR Earned',
-      data: totalData
-    }]);
-    chart.updateOptions({
-      xaxis: {
-        categories: dateData
-      }
-    });
-  });
 });
