@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function(
         width: 2
       },
       fill: {
-        colors: {['#0047b3', '#7acbee' ]},
+        colors: ['#0047b3', '#7acbee'],
         opacity: 0.5,
         type: 'solid'
       data: []
