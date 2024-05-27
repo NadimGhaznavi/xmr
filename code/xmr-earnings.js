@@ -2,11 +2,12 @@ document.addEventListener('DOMContentLoaded', function(
 ) {
   var options = {
     chart: {
-      type: 'spline',
+      type: 'line',
       curve: 'smooth'
     },
     series: [{
       name: 'Total',
+      type: 'area',
       data: []
     }],
     xaxis: {
