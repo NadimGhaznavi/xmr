@@ -1,4 +1,4 @@
-d3.csv("xmr-earnings.csv").then(data => {
+d3.csv("/code/xmr-earnings.csv").then(data => {
   // data is an array of objects, each representing a row from the CSV file
 });
 
