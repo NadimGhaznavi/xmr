@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', function(
 
   chart.render();
 
-  d3.csv("/data/xmr-earnings.csv", function(data) {
+  d3.csv("/assets/csv/xmr-earnings.csv", function(data) {
     const dateData = data.map(d => d.Date);
     const totalData = data.map(d => d.Total);
 
