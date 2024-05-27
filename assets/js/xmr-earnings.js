@@ -1,38 +1,124 @@
 document.addEventListener('DOMContentLoaded', function(
 ) {
-  var options = {
+  var areaOptions = {
     chart: {
-      height: 500,
+      id: "areaChart",
       type: 'area',
+      height: 500,
+      foreColor: "#ccc",
+      toolbar: {
+        autoSelected: "pan",
+        show: false
+      }
+    },
+    colors: ["#00baec"],
+    stroke: {
+      width: 3
+    },
+    grid: {
+      borderColor: "#555",
+      clipMarkers: false,
+      yaxis: {
+        lines: {
+          show: false
+        }
+      }
     },
     dataLabels: {
       enabled: false
     },
+    fill: {
+      gradient: {
+        enabled: true,
+        opacityFrom: 0.55,
+        opacityTo: 0
+      }
+    },
+    markers: {
+      size: 5,
+      colors: ["#000524"],
+      strokeColor: "#00baec",
+      strokeWidth: 3
+    },
     series: [
       {
         name: 'Total XMR Earned',
-        date: [] // Initialize to an empty array
+        data: [] // Initialize to an empty array
       }
     ],
-    fill: {
-      type: 'gradient',
-      gradient: {
-        shadeIntensity: 1, // Set intensity of the gradient shading
-        opacityFrom: 0.7, // Gradient opacity at the start
-        opacityTo: 0.9, // Gradient opacity at the end
-        stops: [0, 90, 100]
-      }
+    tooltip: {
+      theme: "dark"
     },
     xaxis: {
+      type: "datetime",
       categories: []
+    },
+    yaxis: {
+      min: 0,
+      tickAmount: 4
     }
+  };
+  
+  var areaChart = new ApexCharts(document.querySelector("#chart -area"), areaOptions);
+
+  areaChart.render();
+
+var barOptions = {
+  chart: {
+    id: 'barChart',
+    height: 250,
+    type: 'bar',
+    foreColor: "#ccc",
+    brush: {
+      target: "areaChart",
+      enabled: true
+    },
+    selection: {
+      enabled: true,
+      fill: {
+        color: "#fff",
+        opacity: 0.4
+      },
+      xaxis: {
+        min: new Date("21 March 2024 00:00:00").getTime(),
+        max: new Date("27 May 2024 23:59:59").getTime()
+      }
+    }
+  },
+  colors: ["#ff0080"],
+  series: [
+    {
+      data: []
+    }
+  ],
+  stroke: {
+    width: 2
+  },
+  grid: {
+    borderColor: "#444"
+  },
+  markers: {
+    size: 0
+  },
+  xaxis: {
+    type: "datetime",
+    tooltip: {
+      enabled: false
+    }
+  },
+  yaxis: {
+    tickAmount: 2
   }
+};
 
-  var chart = new ApexCharts(document.querySelector("#chart"), options);
+var barChart = new ApexCharts(document.querySelector("#chart -bar"), barOptions);
 
-  chart.render();
+barChart.render()
 
-  d3.csv("/assets/csv/xmr-earnings.csv", function(data) {
+
+
+
+  d3.csv("/_data/xmr-earnings.csv", function(data) {
     const dateData = data.map(d => d.Date);
     const totalData = data.map(d => d.Total);
 

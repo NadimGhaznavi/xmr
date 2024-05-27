@@ -12,10 +12,10 @@ date: 2024-05-26
 <script src="/assets/js/xmr-earnings.js"></script>
 
 <div id="wrapper">
-  <div id="chart-area">
+  <div id="areaChart">
 
   </div>
-  <div id="chat-bar">
+  <div id="barChart">
 
   </div>
 </div>
