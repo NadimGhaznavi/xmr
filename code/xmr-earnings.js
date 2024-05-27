@@ -2,21 +2,25 @@ document.addEventListener('DOMContentLoaded', function(
 ) {
   var options = {
     chart: {
+      height: 500
       type: 'area',
+    },
+    dataLabels: {
+      enabled: false
     },
     series: [
       {
         name: 'Total XMR Earned',
-        date: []
+        date: [] // Initialize to an empty array
       }
     ],
     fill: {
       type: 'gradient',
       gradient: {
         shadeIntensity: 1, // Set intensity of the gradient shading
-        opacityFrom: 0.2, // Gradient opacity at the start
-        opacityTo: 0.8, // Gradient opacity at the end
-        stops: [0, 25, 100]
+        opacityFrom: 0.7, // Gradient opacity at the start
+        opacityTo: 0.9, // Gradient opacity at the end
+        stops: [0, 50, 80, 100]
       }
     },
     xaxis: {
@@ -33,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function(
     const totalData = data.map(d => d.Total);
 
     chart.updateSeries([{
-      name: 'Total',
+      name: 'Total XMR Earned',
       data: totalData
     }]);
     chart.updateOptions({
