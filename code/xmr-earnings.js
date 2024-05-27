@@ -1,57 +1,60 @@
-chart = {
+var parseDate = d3.timeParse("%Y-%m-%d");
+var margin = {left: 50, right: 20, top: 20, bottom: 50 };
 
-  // Declare the chart dimensions and margins.
-  const width = 800;
-  const height = 800;
-  const marginTop = 20;
-  const marginRight = 30;
-  const marginBottom = 30;
-  const marginLeft = 40;
+var width = 960 - margin.left - margin.right;
+var height = 500 - margin.top - margin.bottom;
 
-  // Declare the x (horizontal position) scale.
-  const x = d3.scaleUtc(d3.extent(aapl, d => d.date), [marginLeft, width - marginRight]);
+var max = 0;
 
-  // Declare the y (vertical position) scale.
-  const y = d3.scaleLinear([0, d3.max(aapl, d => d.close)], [height - marginBottom, marginTop]);
+var xNudge = 50;
+var yNudge = 20;
 
-  // Declare the line generator.
-  const line = d3.line()
-      .x(d => x(d.date))
-      .y(d => y(d.close));
+var minDate = new Date();
+var maxDate = new Date();
 
-  // Create the SVG container.
-  const svg = d3.create("svg")
-      .attr("width", width)
-      .attr("height", height)
-      .attr("viewBox", [0, 0, width, height])
-      .attr("style", "max-width: 100%; height: auto; height: intrinsic;");
+d3.csv("/data/xmr-earnings.csv")
+    .row(function(d) { return { month: parseDate(d.month), price: Number(d.price)}; })
+    .get(function(error, rows) {
+	    max = d3.max(rows, function(d) { return d.price; });
+	    minDate = d3.min(rows, function(d) {return d.month; });
+		maxDate = d3.max(rows, function(d) { return d.month; });
 
-  // Add the x-axis.
-  svg.append("g")
-      .attr("transform", `translate(0,${height - marginBottom})`)
-      .call(d3.axisBottom(x).ticks(width / 80).tickSizeOuter(0));
 
-  // Add the y-axis, remove the domain line, add grid lines and a label.
-  svg.append("g")
-      .attr("transform", `translate(${marginLeft},0)`)
-      .call(d3.axisLeft(y).ticks(height / 40))
-      .call(g => g.select(".domain").remove())
-      .call(g => g.selectAll(".tick line").clone()
-          .attr("x2", width - marginLeft - marginRight)
-          .attr("stroke-opacity", 0.1))
-      .call(g => g.append("text")
-          .attr("x", -marginLeft)
-          .attr("y", 10)
-          .attr("fill", "currentColor")
-          .attr("text-anchor", "start")
-          .text("↑ Daily close ($)"));
+		var y = d3.scaleLinear()
+					.domain([0,max])
+					.range([height,0]);
 
-  // Append a path for the line.
-  svg.append("path")
-      .attr("fill", "none")
-      .attr("stroke", "steelblue")
-      .attr("stroke-width", 1.5)
-      .attr("d", line(aapl));
+		var x = d3.scaleTime()
+					.domain([minDate,maxDate])
+					.range([0,width]);
 
-  return svg.node();
-}
+		var yAxis = d3.axisLeft(y);
+
+		var xAxis = d3.axisBottom(x);
+
+		var line = d3.line()
+			.x(function(d){ return x(d.month); })
+			.y(function(d){ return y(d.price); })
+			.curve(d3.curveCardinal);
+
+
+		var svg = d3.select("body").append("svg").attr("id","svg").attr("height","100%").attr("width","100%");
+		var chartGroup = svg.append("g").attr("class","chartGroup").attr("transform","translate("+xNudge+","+yNudge+")");
+
+		chartGroup.append("path")
+			.attr("class","line")
+			.attr("d",function(d){ return line(rows); })
+
+
+		chartGroup.append("g")
+			.attr("class","axis x")
+			.attr("transform","translate(0,"+height+")")
+			.call(xAxis);
+
+		chartGroup.append("g")
+			.attr("class","axis y")
+			.call(yAxis);
+
+
+
+	});
