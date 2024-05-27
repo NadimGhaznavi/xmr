@@ -13,7 +13,8 @@ var svg = d3.select("#csv-chart")
           "translate(" + margin.left + "," + margin.top + ")");
 
 //Read the data
-d3.csv("/data/xmr-earnings.csv",
+//d3.csv("/data/xmr-earnings.csv",
+d3.csv("/data/xmr-earnings.csv").then(data => {
 
   // When reading the csv, I must format variables:
   function(d){
@@ -48,5 +49,4 @@ d3.csv("/data/xmr-earnings.csv",
         .x(function(d) { return x(d.date) })
         .y(function(d) { return y(d.value) })
         )
-
-})
+}})
