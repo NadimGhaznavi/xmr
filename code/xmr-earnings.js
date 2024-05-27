@@ -1,6 +1,5 @@
 d3.csv("/code/xmr-earnings.csv").then(data => {
   // data is an array of objects, each representing a row from the CSV file
-});
 
 const table = d3.select("#csv-data").append("table");
 
@@ -24,3 +23,4 @@ tbody.selectAll("tr")
   .append("td")
   .text(value => value);
 
+});
