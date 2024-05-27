@@ -3,11 +3,18 @@ document.addEventListener('DOMContentLoaded', function(
   var options = {
     chart: {
       type: 'line',
-      curve: 'smooth'
     },
     series: [{
       name: 'Total',
       type: 'area',
+      stroke: {
+        curve: 'smooth',
+        width: 2
+      },
+      fill: {
+        colors: {['#0047b3', '#7acbee' ]},
+        opacity: 0.5,
+        type: 'solid'
       data: []
     }],
     xaxis: {
