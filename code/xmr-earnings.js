@@ -20,6 +20,10 @@ d3.csv("/data/xmr-earnings.csv")
     }; 
   })
   .get(function(error, rows) {
+    if (error) {
+      console.error("Error loading CSV file:", error);
+      return;
+    }
     console.log(rows)
     max = d3.max(rows, function(d) { 
       return d.price; 
