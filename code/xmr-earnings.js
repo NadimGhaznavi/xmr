@@ -1,4 +1,4 @@
-ddEventListener('DOMContentLoaded', function(
+document.addEventListener('DOMContentLoaded', function(
 ) {
   var options = {
     chart: {
