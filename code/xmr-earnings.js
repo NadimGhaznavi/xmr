@@ -12,14 +12,17 @@ document.addEventListener('DOMContentLoaded', function(
         width: 2
       },
       fill: {
-        colors: ['#0047b3', '#7acbee'],
-        opacity: 0.2,
-        gradient: {
-          type: 'horizontal',
-          shadeIntensity: 0.5,
-          gradientToColors: ['#0047b3', '#7acbee'],
-          opacityFrom: 1,
-          opacityTo: 0.5
+	type: 'gradient',
+	gradient: {
+          type: 'vertical', // Set gradient direction (vertical, horizontal, etc.)
+          shadeIntensity: 0.5, // Set intensity of the gradient shading
+          inverseColors: true, // Reverse gradient colors if desired
+          opacityFrom: 0.5, // Gradient opacity at the start
+          opacityTo: 0.5, // Gradient opacity at the end
+          colorStops: [ // Define custom color stops for the gradient
+            { offset: 0, color: '#0047b3' }, // Color at 0%
+            { offset: 100, color: '#7acbee' } // Color at 100%
+          ]
 	}
       },
       data: []
