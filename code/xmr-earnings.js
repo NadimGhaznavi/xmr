@@ -15,8 +15,8 @@ document.addEventListener('DOMContentLoaded', function(
         colors: ['#0047b3', '#7acbee'],
         opacity: 0.5,
         type: 'solid'
+      },
       data: []
-      }
     }],
     xaxis: {
       categories: []
