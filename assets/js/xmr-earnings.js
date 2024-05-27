@@ -73,8 +73,8 @@ document.addEventListener('DOMContentLoaded', function(
       }
     });
   });
-    
-  var areaChart = new ApexCharts(document.querySelector("#chart -area"), areaOptions);
+
+  var areaChart = new ApexCharts(document.querySelector("#areaChart"), areaOptions);
 
   areaChart.render();
 
@@ -126,7 +126,7 @@ var barOptions = {
   }
 };
 
-var barChart = new ApexCharts(document.querySelector("#chart -bar"), barOptions);
+var barChart = new ApexCharts(document.querySelector("#barChart"), barOptions);
 
 barChart.render()
 
