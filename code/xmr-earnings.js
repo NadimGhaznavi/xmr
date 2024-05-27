@@ -5,9 +5,6 @@ document.addEventListener('DOMContentLoaded', function(
       type: 'line'
 },
     series: [{
-      name: 'Date',
-      data: []
-    }, {
       name: 'Total',
       data: []
     }],
@@ -25,9 +22,6 @@ document.addEventListener('DOMContentLoaded', function(
     const totalData = data.map(d => d.Total);
 
     chart.updateSeries([{
-      name: 'Date',
-      data: dateData
-    }, {
       name: 'Total',
       data: totalData
     }]);
