@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', function(
 ) {
   var options = {
     chart: {
-      height: 500
+      height: 500,
       type: 'area',
     },
     dataLabels: {
