@@ -1,42 +1,46 @@
 document.addEventListener('DOMContentLoaded', function() {
+
   var options = {
     chart: {
-      type: 'line'
+      height: 280,
+      type: "area"
+    },
+    dataLabels: {
+      enabled: false
     },
     series: [
       {
-        name: 'Total',
+        name: "Total",
         data: []
       }
     ],
     xaxis: {
       categories: []
     }
-  }
+  };
 
+  var areaChart = new ApexCharts(document.querySelector("#areaChart"), options);
 
-var areaChart = new ApexCharts(document.querySelector("#areaChart"), options);
+  const dateData = [];
+  const totalData = [];
 
-chart.render()
+  d3.csv("/_data/xmr-earnings.csv", function(csvData) {
+    console.log(csvData);
+    const { Date, Total } = csvData;
+    dateData.push(Date);
+    totalData.push(Number(Total));
 
-d3.csv("/_data/xmr-earnings.csv", function(data) {
-  const dateData = data.map(d => d.Date);
-  const totalData = data.map(d => d.Total);
-
-  chart.updateSeries(
-    [
-      {
-        name: 'Total',
-        data: totalData
-      }
-    ]
-  );
+    areaChart.updateSeries([{
+      name: 'Total',
+      data: totalData
+    }]);
   
-  chart.updateOptions(
-    {
+    areaChart.updateOptions({
       xaxis: {
-        categories: dateData
-      }
-    }
-  );
-}};
+      categories: dateData
+    }});  
+    
+  });
+  
+  areaChart.render();  
+});

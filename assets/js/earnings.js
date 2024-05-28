@@ -2,6 +2,7 @@ var data = generateDayWiseTimeSeries(new Date("22 Apr 2017").getTime(), 115, {
   min: 30,
   max: 90
 });
+
 var options1 = {
   chart: {
     id: "chart2",
