@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function() {
       categories: []
     }
   }
-}
+
 
 var areaChart = new ApexCharts(document.querySelector("#areaChart"), options);
 
@@ -39,4 +39,4 @@ d3.csv("/_data/xmr-earnings.csv", function(data) {
       }
     }
   );
-}
+}};
