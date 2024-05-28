@@ -1,7 +1,7 @@
 ---
 layout: post
 title: XMR Earnings
-date: 2024-05-27
+date: 2024-05-28
 ---
 
 <script src="https://d3js.org/d3.v4.js"></script>
