@@ -20,7 +20,7 @@ Papa.parse(csvUrl, {
     
     const options = {
       chart: {
-        height: 280,
+        height: 500,
         type: "area"
       },
       dataLabels: {
@@ -28,7 +28,8 @@ Papa.parse(csvUrl, {
       },
       series: [{
         name: 'Total',
-        data: totalData.map((total, index) => ({ x: dateData[index], y: total }))
+        data: totalData.map((total, index) => ({ x: dateData[index], y: total })),
+        fill: true
       }],
       xaxis: {
         type: 'datetime'
