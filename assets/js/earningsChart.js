@@ -7,6 +7,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const date = csvData['Date'];
     const total = csvData['Total'];
 
+    console.log("date: ", date);
+    console.log("total: ", total);
+
     dateData.push(date);
     totalData.push(Number(total));
 
