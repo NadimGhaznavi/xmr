@@ -39,8 +39,9 @@ document.addEventListener('DOMContentLoaded', function() {
       xaxis: {
       categories: dateData
     }});  
-    
+  
+    areaChart.render();  
+
   });
   
-  areaChart.render();  
 });
