@@ -1,8 +1,6 @@
 const csvUrl = '/data/xmr-earnings.csv';
 const dateData = [];
 const totalData = [];
-var minDate = null;
-var maxDate = null;
 
 Papa.parse(csvUrl, {
   download: true,
@@ -21,13 +19,6 @@ Papa.parse(csvUrl, {
 
       // Parse the date string and convert it to a timestamp
       const date = new Date(dateString).getTime();
-
-      if (minDate == null || date < minDate) {
-        minDate = date;
-      }
-      if (maxDate == null || date > maxDate) {
-        maxDate = date;
-      }
 
       dateData.push(date);
       //totalData.push(Number(total));
@@ -112,8 +103,8 @@ Papa.parse(csvUrl, {
             opacity: 0.4
           },
           xaxis: {
-            min: minDate,
-            max: maxDate
+            min: new Date("06 May 2024 00:00:00").getTime(),
+            max: new Date("23 May 2024 23:59:59").getTime()
           }
         }
       },
