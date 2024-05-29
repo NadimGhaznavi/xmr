@@ -2,10 +2,11 @@
 layout: post
 title: XMR Earnings
 date: 2024-05-28
+custom-javascript-list:
+    - "https://d3js.org/d3.v4.js"
+    - "https://cdn.jsdelivr.net/npm/apexcharts"
 ---
-
-<script src="https://d3js.org/d3.v4.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+{% include custom-scripts.html %}
 <script src="/assets/js/earningsChart.js"></script>
 
 # XMR Earnings
