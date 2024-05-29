@@ -2,19 +2,23 @@ const csvUrl = '/data/xmr-earnings.csv';
 const dateData = [];
 const totalData = [];
 
+Copy
 Papa.parse(csvUrl, {
   download: true,
   header: true,
   delimiter: ",",
   complete: data => {
     data.data.forEach(row => {
-      const date = row['Date'];
+      const dateString = row['Date'];
       const total = row['Total'];
+
+      // Parse the date string and convert it to a timestamp
+      const date = new Date(dateString).getTime();
 
       dateData.push(date);
       totalData.push(Number(total));
     });
-
+    
     const options = {
       chart: {
         height: 280,
@@ -25,8 +29,11 @@ Papa.parse(csvUrl, {
       },
       series: [{
         name: 'Total',
-        data: totalData
+        data: totalData.map((total, index) => ({ x: dateData[index], y: total }))
       }],
+      xaxis: {
+        type: 'datetime'
+      },
       fill: {
         type: "gradient",
         gradient: {
@@ -36,8 +43,8 @@ Papa.parse(csvUrl, {
           stops: [0, 90, 100]
         }
       },
-      xaxis: {
-        categories: dateData
+      stroke: {
+        curve: 'smooth'
       }
     };
 
@@ -45,3 +52,4 @@ Papa.parse(csvUrl, {
     areaChart.render();
   }
 });
+
