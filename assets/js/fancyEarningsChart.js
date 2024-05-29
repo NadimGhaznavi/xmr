@@ -39,7 +39,7 @@ Papa.parse(csvUrl, {
       chart: {
         id: "barChart",
         type: "area",
-        height: 500,
+        height: 400,
         foreColor: "#ccc",
         toolbar: {
           autoSelected: "pan",
@@ -85,10 +85,10 @@ Papa.parse(csvUrl, {
       },
       xaxis: {
         type: "datetime"
-      },
-      yaxis: {
-        min: 0,
-        tickAmount: 4
+      //},
+      //yaxis: {
+      //  min: 0,
+      //  tickAmount: 4
       }
     };
 
@@ -98,7 +98,7 @@ Papa.parse(csvUrl, {
     var barOptions = {
       chart: {
         id: "areaChart",
-        height: 200,
+        height: 120,
         type: "bar",
         foreColor: "#ccc",
         brush: {
