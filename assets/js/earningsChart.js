@@ -27,8 +27,19 @@ Papa.parse(csvUrl, {
         name: 'Total',
         data: totalData
       }],
+      fill: {
+        type: "gradient",
+        gradient: {
+          shadeIntensity: 1,
+          opacityFrom: 0.7,
+          opacityTo: 0.9,
+          stops: [0, 90, 100]
+        }
+      },
       xaxis: {
-        categories: dateData
+        categories: [ 
+          dateData
+        ]
       }
     };
 
