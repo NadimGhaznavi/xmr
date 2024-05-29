@@ -9,5 +9,10 @@ date: 2024-05-29
 
 # XMR Earnings
 
- <div id="areaChart">
+<div id="wrapper">
+  <div id="areaChart">
+  </div>
+  <div id="barChart">
+  </div>
  </div>
+
