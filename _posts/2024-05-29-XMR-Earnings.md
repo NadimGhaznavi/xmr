@@ -5,7 +5,7 @@ date: 2024-05-29
 ---
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-<script src="/assets/js/earningsChart2.js"></script>
+<script src="/assets/js/fancyEarningsChart.js"></script>
 
 # XMR Earnings
 
