@@ -33,11 +33,7 @@ Papa.parse(csvUrl, {
       //totalData.push(Number(total));
       totalData.push({ x: date, y: value });
 
-
-
     });
-    console.log("dateData: ", dateData)
-    console.log("totalData: ", totalData)
     
     const areaOptions = {
       chart: {
