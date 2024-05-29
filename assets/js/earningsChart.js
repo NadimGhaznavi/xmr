@@ -2,47 +2,43 @@ const csvUrl = '/data/xmr-earnings.csv';
 const dateData = [];
 const totalData = [];
 
-const fetchAndParseCSV = async () => {
-  const response = await fetch(csvUrl);
-  const text = await response.text();
+const loadAndParseCSV = () => {
+  const response = fetch(csvUrl);
+  const text = response.text();
 
-  return Papa.parse(text, {
+  const parsedData = Papa.parse(text, {
     header: true,
-    delimiter: ","
+    delimiter: ",",
+    complete: () => {
+      parsedData.data.forEach(data => {
+        const date = data['Date'];
+        const total = data['Total'];
+
+        dateData.push(date);
+        totalData.push(Number(total));
+      });
+    }
   });
 };
 
-const loadCSV = async () => {
-  const parsedData = await fetchAndParseCSV();
+loadAndParseCSV();
 
-  parsedData.data.forEach(data => {
-    const date = data['Date'];
-    const total = data['Total'];
-
-    dateData.push(date);
-    totalData.push(Number(total));
-  });
-
-  const options = {
-    chart: {
-      height: 280,
-      type: "area"
-    },
-    dataLabels: {
-      enabled: false
-    },
-    series: [{
-      name: 'Total',
-      data: totalData
-    }],
-    xaxis: {
-      categories: dateData
-    },
-  };
-
-  var areaChart = new ApexCharts(document.querySelector("#areaChart"), options);
-  areaChart.render();
-
+var options = {
+  chart: {
+    height: 280,
+    type: "area"
+  },
+  dataLabels: {
+    enabled: false
+  },
+  series: [{
+    name: 'Total',
+    data: totalData
+  }],
+  xaxis: {
+    categories: dateData
+  }
 };
-  
-loadCSV();
+
+var areaChart = new ApexCharts(document.querySelector("#areaChart"), options);
+areaChart.render();
