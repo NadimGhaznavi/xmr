@@ -1,21 +1,22 @@
 document.addEventListener('DOMContentLoaded', function() {
-
   const dateData = [];
   const totalData = [];
 
-  d3.csv("/data/xmr-earnings.csv", function(csvData) {
-    csvData.forEach(function(data) {
-      const date = csvData['Date'];
-      const total = csvData['Total'];
+  const loadCSV = async () => {
+    const response = await fetch("/data/xmr-earnings.csv");
+    const text = await response.text();
 
-      console.log("date: ", date);
-      console.log("total: ", total);
+    const parsedData = Papa.parse(text, {
+      header: true,
+      delimiter: ","
+    });
+
+    parsedData.data.forEach(data => {
+      const date = data['Date'];
+      const total = data['Total'];
 
       dateData.push(date);
       totalData.push(Number(total));
-
-      console.log("dateData: ", dateData);
-      console.log("totalData: ", totalData);
     });
 
     const options = {
@@ -36,7 +37,8 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     var areaChart = new ApexCharts(document.querySelector("#areaChart"), options);
-    areaChart.render();  
-  }, d3.autoType);
-  
+    areaChart.render();
+  };
+
+  loadCSV();
 });
