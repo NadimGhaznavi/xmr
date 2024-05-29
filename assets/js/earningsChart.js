@@ -37,9 +37,7 @@ Papa.parse(csvUrl, {
         }
       },
       xaxis: {
-        categories: [ 
-          dateData
-        ]
+        categories: dateData
       }
     };
 
