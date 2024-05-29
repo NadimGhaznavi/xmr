@@ -8,6 +8,7 @@ date: 2024-05-28
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script src="/assets/js/earningsChart.js"></script>
 
-<div id="wrapper">
-  <div id="areaChart"></div>
-</div>
+# XMR Earnings
+
+ <div id="areaChart">
+ </div>
