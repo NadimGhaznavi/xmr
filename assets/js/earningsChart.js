@@ -1,8 +1,8 @@
-document.addEventListener('DOMContentLoaded', function() {
+//document.addEventListener('DOMContentLoaded', function() {
   const dateData = [];
   const totalData = [];
 
-  const loadCSV = async () => {
+ // const loadCSV = async () => {
     const response = await fetch("/data/xmr-earnings.csv");
     const text = await response.text();
 
@@ -36,12 +36,21 @@ document.addEventListener('DOMContentLoaded', function() {
       },
       stroke: {
         width: 2
+      },
+      fill: {
+        type: "gradient",
+        gradient: {
+          shadeIntensity: 1,
+          opacityFrom: 0.7,
+          opacityTo: 0.9,
+          stops: [0, 90, 100]
+        }
       }
     };
 
     var areaChart = new ApexCharts(document.querySelector("#areaChart"), options);
     areaChart.render();
-  };
-
-  loadCSV();
-});
+  //};
+  //loadCSV();
+  
+//});
