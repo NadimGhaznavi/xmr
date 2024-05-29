@@ -2,7 +2,6 @@ const csvUrl = '/data/xmr-earnings.csv';
 const dateData = [];
 const totalData = [];
 
-Copy
 Papa.parse(csvUrl, {
   download: true,
   header: true,
