@@ -27,7 +27,7 @@ Papa.parse(csvUrl, {
     const options = {
       chart: {
         height: 500,
-        type: "bar"
+        type: "area"
       },
       dataLabels: {
         enabled: false
