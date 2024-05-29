@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const dateData = [];
   const totalData = [];
 
-  d3.csv("/_data/xmr-earnings.csv", function(csvData) {
+  d3.csv("/data/xmr-earnings.csv", function(csvData) {
     console.log(csvData);
     const { Date, Total } = csvData;
     dateData.push(Date);
