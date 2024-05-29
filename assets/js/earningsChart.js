@@ -4,10 +4,11 @@ document.addEventListener('DOMContentLoaded', function() {
   const totalData = [];
 
   d3.csv("/data/xmr-earnings.csv", function(csvData) {
-    const { Date, Total } = csvData;
+    const date = csvData['Date'];
+    const total = csvData['Total'];
 
-    dateData.push(Date);
-    totalData.push(Number(Total));
+    dateData.push(date);
+    totalData.push(Number(total));
 
     console.log("dateData: ", dateData);
     console.log("totalData: ", totalData);
