@@ -33,6 +33,9 @@ document.addEventListener('DOMContentLoaded', function() {
       }],
       xaxis: {
         categories: dateData
+      },
+      stroke: {
+        width: 2
       }
     };
 
