@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   };
 
-  var areaChart = new ApexCharts(document.querySelector("#areaChart"), options);
+  var areaChart = new Apex(document.querySelector("#areaChart"), options);
 
   const dateData = [];
   const totalData = [];
