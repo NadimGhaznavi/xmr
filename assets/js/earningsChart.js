@@ -3,8 +3,11 @@
   const totalData = [];
 
  // const loadCSV = async () => {
-    const response = await fetch("/data/xmr-earnings.csv");
-    const text = await response.text();
+ //   const response = await fetch("/data/xmr-earnings.csv");
+  //  const text = await response.text();
+
+  const respmse = fetch("/data/xmr-earnings.csv");
+  const text = response.text();
 
     const parsedData = Papa.parse(text, {
       header: true,
