@@ -8,4 +8,3 @@ The purpose of this site is to document and share information about *Parallax* a
 
 Stay tuned for updates!
 
-     -*Nadim-Daniel Ghaznavi*
