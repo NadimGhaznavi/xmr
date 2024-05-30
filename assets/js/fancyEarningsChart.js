@@ -129,9 +129,6 @@ Papa.parse(csvUrl, {
           enabled: false
         }
       },
-      yaxis: {
-        tickAmount: 2
-      }
     };
 
     var barChart = new ApexCharts(document.querySelector("#barChart"), barOptions);
