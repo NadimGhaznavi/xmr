@@ -68,7 +68,7 @@ Papa.parse(csvUrl, {
       },
       series: [
         {
-          name: "Total Earnings"
+          name: "Total Earnings",
           data: totalData
         }
       ],
