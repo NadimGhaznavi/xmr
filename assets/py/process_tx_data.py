@@ -117,7 +117,7 @@ for aRow in nRows:
 outFileHandle = open(outFileName, 'w')
 for aRow in zRows:
     print("Writing Row :", aRow)
-    outFileHandle.write(aRow[0] + "," + str(aRow[1]) + "," + str(aRow[2]) + "\n")
+    outFileHandle.write(aRow[0] + "," + str(aRow[2]) + "\n")
 outFileHandle.close()
 
 print("Done. Results in:", outFileName)
