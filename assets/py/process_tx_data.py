@@ -6,12 +6,11 @@ from datetime import datetime, timedelta
 
 try:
     CsvFileName = sys.argv[1]
-    #infilename = "monero-txs_1716633222.csv"
 except:
     print("Usage: " + sys.argv[0] + " <CSV File>")
     exit(1)
 
-outFileName = 'txclean.csv'
+outFileName = 'xmr-earnings.csv'
 
 CsvFileHandle = open(CsvFileName)
 CsvFile = csv.reader(CsvFileHandle)
