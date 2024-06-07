@@ -43,7 +43,7 @@ Papa.parse(csvUrl, {
       },
       grid: {
         borderColor: "#555",
-        clipMarkers: false,
+        clipMarkers: true,
         yaxis: {
           lines: {
             show: false
@@ -68,7 +68,7 @@ Papa.parse(csvUrl, {
       },
       series: [
         {
-          name: "Daily Earnings"
+          name: "Total Earnings"
           data: totalData
         }
       ],
