@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Mining Farm hosts, services and port numbers
-date: 2024-MM-DD
+date: 2024-06-11
 ---
 
 # Introduction and Scope
