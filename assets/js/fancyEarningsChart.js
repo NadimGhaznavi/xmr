@@ -61,7 +61,7 @@ Papa.parse(csvUrl, {
         }
       },
       markers: {
-        size: 2,
+        size: 0,
         colors: ["#000524"],
         strokeColor: "#00baec",
         strokeWidth: 1
