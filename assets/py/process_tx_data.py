@@ -116,7 +116,12 @@ for aRow in nRows:
 outFileHandle = open(outFileName, 'w')
 for aRow in zRows:
     print("Writing Row :", aRow)
-    outFileHandle.write(aRow[0] + "," + str(round(aRow[2], 4)) + "\n")
+    if aRow[2] == 'Total':
+      total = aRow[2]
+    else:
+      total = round(float(aRow[2]), 4)
+  
+    outFileHandle.write(aRow[0] + "," + str(total) + "\n")
 outFileHandle.close()
 
 print("Done. Results in:", outFileName)
