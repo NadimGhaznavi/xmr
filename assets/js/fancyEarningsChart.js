@@ -30,7 +30,7 @@ Papa.parse(csvUrl, {
       chart: {
         id: "barChart",
         type: "area",
-        height: 220,
+        height: 260,
         foreColor: "#ccc",
         toolbar: {
           autoSelected: "pan",
