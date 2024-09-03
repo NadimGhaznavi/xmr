@@ -6,7 +6,7 @@ author:
 # The `>` after `description:` means to ignore line-breaks until next key.
 # If you want to omit the line-break after the end of text, use `>-` instead.
 description: >
-  A website to document the process of developing Parallax, a Monero XMR miner.
+  A website to share information about my Monero XMR Mining farm.
 
 # Build settings
 
