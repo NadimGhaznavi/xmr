@@ -1,4 +1,3 @@
-const csvUrl = '/data/xmr-earnings.csv';
 const csvUrl = '/data/p2pool_payouts.csv';
 const dateData = [];
 const totalData = [];
