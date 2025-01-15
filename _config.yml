@@ -1,0 +1,8 @@
+remote_theme: SallyKolodny/minimo
+
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+
+minima:
+  skin: dark
