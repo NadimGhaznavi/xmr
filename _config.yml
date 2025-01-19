@@ -1,4 +1,4 @@
-remote_theme: SallyKolodny/minimo
+remote_theme: NdimGhaznavi/minimo
 
 plugins:
   - jekyll-feed
