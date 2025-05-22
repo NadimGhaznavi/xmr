@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Monero Daemon Configuration 
-date: 2024-09-26
+date: 2025-05-22
 ---
 
 # Introduction and Scope
@@ -108,11 +108,11 @@ RPC_BIND_PORT="20081"
 PRIORITY_NODE_PORT="18080"
 
 # Peer limits
-OUT_PEERS="20"
-IN_PEERS="20"
+OUT_PEERS="10"
+IN_PEERS="10"
 
 # Log settings
-LOG_LEVEL="0"
+LOG_LEVEL="1"
 MAX_LOG_FILES="5"
 MAX_LOG_SIZE="100000"
 LOG_NAME="monerod.log"
@@ -123,6 +123,9 @@ SHOW_TIME_STATS="1"
 # Where the blockchain (lmdb directory) is stored
 DATA_DIR="/opt/prod/monero-blockchain"
 
+# Where RPC Micro payments go (unused)
+WALLET_KEY="48wY7nYBsQNSw7v4Ljo7k3ffNnCtk1YGLNVmPGrW8gVhYQtWJHi6UG3X57JN2ajUSeBcijET8ZzKWYwC3z3Y6fFOO"
+
 # Trusted Monero nodes to sync off
 PRIORITY_NODE_1="p2pmd.xmrvsbeast.com"
 PRIORITY_NODE_2="nodes.hashvault.pro"
@@ -131,13 +134,21 @@ PRIORITY_NODE_2="nodes.hashvault.pro"
 
 MONEROD_DIR=/opt/prod/monerod
 
+# Find the monerod daemon
+if [ -d $MONEROD_DIR ]; then
+	MONERO_DIR=$MONEROD_DIR
+else
+	echo "ERROR: Unable to locate the monerod daemon, exiting..."
+	exit 1
+fi
+
 # Set the log name for monerod
 LOG_NAME="${MONERO_DIR}/${LOG_NAME}"
 
 # Make sure the daemon is being run as root
 USER=$(whoami)
 if [ "$USER" != "root" ]; then
-	echo "ERROR: You must run the monerod daemon as root, exiting.."
+	echo "ERROR: Run the monerod daemon as root, exiting.."
 	exit 1
 fi
 
@@ -146,8 +157,8 @@ $MONERO_DIR/monerod \
 	--zmq-pub tcp://${IP_ALL}:${ZMQ_PUB_PORT} \
 	--zmq-rpc-bind-ip ${IP_ALL} --zmq-rpc-bind-port ${ZMQ_RPC_PORT} \
 	--p2p-bind-ip ${IP_ALL} --p2p-bind-port ${P2P_BIND_PORT} \
-	--add-priority-node=${PRIORITY_NODE_1}:${P2P_BIND_PORT} \
-	--add-priority-node=${PRIORITY_NODE_2}:${P2P_BIND_PORT} \
+	--add-priority-node=${PRIORITY_NODE_1}:${PRIORITY_NODE_PORT} \
+	--add-priority-node=${PRIORITY_NODE_2}:${PRIORITY_NODE_PORT} \
 	--rpc-bind-ip ${IP_ALL} --rpc-bind-port ${RPC_BIND_PORT} --restricted-rpc \
 	--confirm-external-bind \
 	--data-dir ${DATA_DIR} \
@@ -159,7 +170,8 @@ $MONERO_DIR/monerod \
 	--show-time-stats ${SHOW_TIME_STATS} \
 	--igd enabled \
 	--max-connections-per-ip 1 \
-	--db-sync-mode safe 
+	--db-sync-mode safe | tee -a ${LOG_NAME}
+
 ```
 
 Once you've created this shell script you'll need to make it executible:
