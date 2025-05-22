@@ -24,7 +24,7 @@ Note that the graph is remarkably linear with a few exceptions:
   * 2024-08-19 06:53:37	Bonus: 6624.5kH/s	Round: vip
   * 2024-07-12 07:20:14 ERROR: miner not found in PPLNS window, skipping
   * 2024-05-17 10:03:26	Bonus: 7798.6kH/s	Round: vip
-* The slight increase from mid June till the end of the month is when I burned through about $750 free credits of cloud resources and I setup various container configurations (1 CPU up to 8 CPU with 8 Gb up to 32 Gb) to mine in the cloud.
+* The slight increase from mid June, 2024 till the end of the month is when I burned through about $750 free credits of cloud resources and I setup various container configurations (1 CPU up to 8 CPU with 8 Gb up to 32 Gb) to mine in the cloud.
 * I added two miners with a modest hash rate of about 750 H/s and 215 H/a in early October, 2024 and you can see the slight increase in the slope of the graph.
 
 Here's a snapshot (taken on November 11, 2024) showing the hashrates of the workers in the mining farm:
@@ -43,3 +43,4 @@ Here's a snapshot (taken on November 11, 2024) showing the hashrates of the work
 The graph shows a direct relationship between hash rate and profitability and also shows that it's a consistent relationship over time.
 
 Finally, for anyone thinking about mining in the cloud: It's not worth it. In fact it's only because my rent includes electricity that I'm able to mine at home and make a profit.
+
