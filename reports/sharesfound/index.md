@@ -5,8 +5,6 @@ date: 2025-06-08
 
 # Reports
 
-Reports [definition file](/conf/reports/sharesfound.yml).
-
 * [Sharesfound - all data](/reports/sharesfound/Sharesfound.html)
 * [Sharesfound - 30 days](/reports/sharesfound/Sharesfound-30-Days.html)
 * [Sharesfound - 60 days](/reports/sharesfound/Sharesfound-60-Days.html)
@@ -16,4 +14,4 @@ Reports [definition file](/conf/reports/sharesfound.yml).
 * [By-miner Sharesfound - 60 days](/reports/sharesfound/By-miner-Sharesfound-60-Days.html)
 * [By-miner Sharesfound - 90 days](/reports/sharesfound/By-miner-Sharesfound-90-Days.html)
 
-Last updated: 2025-06-08 19:28
+Last updated: 2025-06-08 19:55
