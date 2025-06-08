@@ -6,9 +6,8 @@ layout: default
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script src="/assets/js/sharesfound/by-miner-sharesfound-30days.js"></script>
 
-This site houses data from the *db4e* QA environment.
+This site houses data from the production XMR Mining Farm.
 
 * [Reports](/pages/Reports.html)
 * [Donations](/pages/Donations.html)
 
-The data from the production XMR Mining Farm can be found [here](https://xmr.osoyalce.com/).
