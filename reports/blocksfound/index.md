@@ -1,6 +1,6 @@
 ---
 title: Blocksfound Reports
-date: 2025-06-08
+date: 2025-06-09
 ---
 
 # Reports
@@ -11,4 +11,4 @@ date: 2025-06-08
 * [Blocksfound - 90 days](/reports/blocksfound/Blocksfound-90-Days.html)
 * [Blocksfound - 180 days](/reports/blocksfound/Blocksfound-180-Days.html)
 
-Last updated: 2025-06-08 22:28
+Last updated: 2025-06-09 17:33
