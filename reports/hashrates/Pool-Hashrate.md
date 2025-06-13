@@ -1,6 +1,6 @@
 ---
 title: Hashrate of the Local Pool in KH/s
-date: 2025-06-08
+date: 2025-06-13
 ---
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
@@ -15,4 +15,4 @@ date: 2025-06-08
  </div>
 
 * Days of data: all available
-* Last updated: 2025-06-08 19:54
+* Last updated: 2025-06-13 09:37
