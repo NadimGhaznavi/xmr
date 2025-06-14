@@ -1,3 +1,32 @@
+/* 
+tmpl/js/sidechain-hashrate.js
+
+This template is used by the Db4eReports module to generate report
+specific JavaScript files.
+*/
+
+
+/*
+  This file is part of *db4e*, the *Database 4 Everything* project
+  <https://github.com/NadimGhaznavi/db4e>, developed independently
+  by Nadim-Daniel Ghaznavi. Copyright (c) 2024-2025 NadimGhaznavi
+  <https://github.com/NadimGhaznavi/db4e>.
+ 
+  This program is free software: you can redistribute it and/or 
+  modify it under the terms of the GNU General Public License as 
+  published by the Free Software Foundation, version 3.
+ 
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  General Public License for more details.
+
+  You should have received a copy (LICENSE.txt) of the GNU General 
+  Public License along with this program. If not, see 
+  <http://www.gnu.org/licenses/>.
+*/
+
+
 const csvUrl = '/csv/hashrates/sidechain-hashrate.csv';
 const dateData = [];
 const hashData = [];
@@ -18,7 +47,10 @@ Papa.parse(csvUrl, {
       }
 
       // Parse the date string and convert it to a timestamp
-      const date = new Date(dateString).getTime();
+      const [datePart, hourPart] = dateString.split(' ');
+      const [year, month, day] = datePart.split('-').map(Number);
+      const hour = parseInt(hourPart, 10);
+      const date = new Date(year, month - 1, day, hour).getTime();
 
       dateData.push(date);
       //totalData.push(Number(total));
@@ -28,7 +60,7 @@ Papa.parse(csvUrl, {
     
     const areaOptions = {
       chart: {
-        id: "barChart",
+        id: "areaChart",
         type: "area",
         height: 275,
         foreColor: "#ccc",
@@ -77,10 +109,9 @@ Papa.parse(csvUrl, {
       },
       xaxis: {
         type: "datetime"
-      //},
-      //yaxis: {
-      //  min: 0,
-      //  tickAmount: 4
+      },
+      yaxis: {
+        min: 0
       }
     };
 
@@ -89,12 +120,12 @@ Papa.parse(csvUrl, {
 
     var barOptions = {
       chart: {
-        id: "areaChart",
+        id: "barChart",
         height: 100,
         type: "bar",
         foreColor: "#ccc",
         brush: {
-          target: "barChart",
+          target: "areaChart",
           enabled: true
         },
         selection: {
