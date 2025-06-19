@@ -1,6 +1,6 @@
 ---
 title: Hashrate Reports
-date: 2025-06-18
+date: 2025-06-19
 ---
 
 # Reports
@@ -18,4 +18,4 @@ date: 2025-06-18
 * [Mainchain Hashrate - 60 days](/reports/hashrates/Mainchain-Hashrate-60-Days.html)
 * [Mainchain Hashrate - 90 days](/reports/hashrates/Mainchain-Hashrate-90-Days.html)
 
-Last updated: 2025-06-18 23:00
+Last updated: 2025-06-19 00:00
