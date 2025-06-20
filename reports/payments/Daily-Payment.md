@@ -1,6 +1,6 @@
 ---
 title: Daily XMR Payments from P2Pool Mining
-date: 2025-06-18
+date: 2025-06-20
 ---
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
@@ -15,4 +15,4 @@ date: 2025-06-18
  </div>
 
 * Days of data: all available
-* Last updated: 2025-06-18 14:17
+* Last updated: 2025-06-20 15:54
