@@ -1,6 +1,6 @@
 ---
 title: Shares Found on the Mini Sidechain
-date: 2025-07-27
+date: 2025-07-28
 ---
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
@@ -15,4 +15,4 @@ date: 2025-07-27
  </div>
 
 * Days of data: all available
-* Last updated: 2025-07-27 22:47
+* Last updated: 2025-07-28 09:22
