@@ -15,4 +15,4 @@ date: 2025-08-01
  </div>
 
 * Days of data: all available
-* Last updated: 2025-08-01 07:00
+* Last updated: 2025-08-01 08:00
