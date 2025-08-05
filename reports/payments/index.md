@@ -1,6 +1,6 @@
 ---
 title: Payment Reports
-date: 2025-08-02
+date: 2025-08-05
 ---
 
 # Reports
@@ -14,4 +14,4 @@ date: 2025-08-02
 * [Cumulative Payment - 90 days](/reports/payments/Cumulative-Payment-90-Days.html)
 * [Cumulative Payment - 180 days](/reports/payments/Cumulative-Payment-180-Days.html)
 
-Last updated: 2025-08-02 15:17
+Last updated: 2025-08-05 08:52
