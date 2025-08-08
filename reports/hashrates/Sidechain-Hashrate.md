@@ -1,6 +1,6 @@
 ---
 title: Hashrate of the Sidechain in MH/s
-date: 2025-08-07
+date: 2025-08-08
 ---
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
@@ -15,4 +15,4 @@ date: 2025-08-07
  </div>
 
 * Days of data: all available
-* Last updated: 2025-08-07 23:00
+* Last updated: 2025-08-08 00:00
