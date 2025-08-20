@@ -18,4 +18,4 @@ date: 2025-08-20
 * [Mainchain Hashrate - 60 days](/reports/hashrates/Mainchain-Hashrate-60-Days.html)
 * [Mainchain Hashrate - 90 days](/reports/hashrates/Mainchain-Hashrate-90-Days.html)
 
-Last updated: 2025-08-20 07:00
+Last updated: 2025-08-20 08:00
