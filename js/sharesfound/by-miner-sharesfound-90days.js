@@ -39,6 +39,7 @@ const totalPhoebeData = [];
 const totalIslandsData = [];
 const totalThepadData = [];
 const totalBillData = [];
+const totalBillData = [];
 
 Papa.parse(csvUrl, {
   download: true,
@@ -57,6 +58,7 @@ const phoebe = row['phoebe'];
 const islands = row['islands'];
 const thepad = row['thepad'];
 const bill = row['bill'];
+const Bill = row['Bill'];
 
       // Check for missing or invalid data
       //if (!dateString || isNaN(value)) {
@@ -79,6 +81,7 @@ const bill = row['bill'];
       totalIslandsData.push({ x:date, y: islands});
       totalThepadData.push({ x:date, y: thepad});
       totalBillData.push({ x:date, y: bill});
+      totalBillData.push({ x:date, y: Bill});
     });
     
     const areaOptions = {
@@ -157,6 +160,10 @@ const bill = row['bill'];
         {
           name: "Thepad",
           data: totalThepadData
+        },
+        {
+          name: "Bill",
+          data: totalBillData
         },
         {
           name: "Bill",
