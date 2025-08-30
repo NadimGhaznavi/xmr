@@ -1,6 +1,6 @@
 ---
 title: Blocks Found on the Mini Sidechain
-date: 2025-08-29
+date: 2025-08-30
 ---
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
@@ -15,4 +15,4 @@ date: 2025-08-29
  </div>
 
 * Days of data: all available
-* Last updated: 2025-08-29 16:29
+* Last updated: 2025-08-30 13:41
