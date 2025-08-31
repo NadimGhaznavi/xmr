@@ -1,6 +1,6 @@
 ---
 title: Hashrate of the Mainchain in GH/s
-date: 2025-08-30
+date: 2025-08-31
 ---
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
@@ -15,4 +15,4 @@ date: 2025-08-30
  </div>
 
 * Days of data: 90
-* Last updated: 2025-08-30 23:00
+* Last updated: 2025-08-31 00:00
