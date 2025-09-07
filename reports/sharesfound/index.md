@@ -1,6 +1,6 @@
 ---
 title: Sharesfound Reports
-date: 2025-09-06
+date: 2025-09-07
 ---
 
 # Reports
@@ -14,4 +14,4 @@ date: 2025-09-06
 * [By-miner Sharesfound - 60 days](/reports/sharesfound/By-miner-Sharesfound-60-Days.html)
 * [By-miner Sharesfound - 90 days](/reports/sharesfound/By-miner-Sharesfound-90-Days.html)
 
-Last updated: 2025-09-06 20:09
+Last updated: 2025-09-07 05:57
