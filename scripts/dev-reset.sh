@@ -4,6 +4,9 @@ set -euo pipefail
 readonly BASE_DIR="/opt/xmr"
 readonly SERVICE_NAME="xmr.service"
 readonly SERVICE_FILE="/etc/systemd/system/$SERVICE_NAME"
+readonly CADDY_FILE="/etc/caddy/Caddyfile"
+readonly CADDY_BACKUP="$BASE_DIR/etc/Caddyfile.before-xmr"
+readonly CADDY_ACTIVE_MARKER="$BASE_DIR/etc/caddy-was-active"
 
 step() {
     printf '\n==> %s\n' "$1"
@@ -26,6 +29,20 @@ remove_systemd_service() {
     systemctl reset-failed "$SERVICE_NAME" 2>/dev/null || true
 }
 
+restore_caddy_config() {
+    if [[ -f "$CADDY_BACKUP" ]]; then
+        install -o root -g root -m 0644 "$CADDY_BACKUP" "$CADDY_FILE"
+    else
+        rm -f -- "$CADDY_FILE"
+    fi
+
+    if [[ -f "$CADDY_ACTIVE_MARKER" ]]; then
+        systemctl reload-or-restart caddy.service
+    else
+        systemctl stop caddy.service 2>/dev/null || true
+    fi
+}
+
 remove_installation() {
     rm -rf -- "$BASE_DIR"
 }
@@ -35,6 +52,9 @@ main() {
 
     step "Removing systemd service"
     remove_systemd_service
+
+    step "Restoring Caddy configuration"
+    restore_caddy_config
 
     step "Removing installation directory ($BASE_DIR)"
     remove_installation
