@@ -49,8 +49,9 @@ create_directories() {
 }
 
 install_application() {
-    # Copy application files here once the source tree exists.
-    :
+    install -o root -g root -m 0644 \
+        "$REPO_DIR/web/server.py" \
+        "$BASE_DIR/web/server.py"
 }
 
 create_virtualenv() {
@@ -94,4 +95,3 @@ main() {
 }
 
 main "$@"
-
