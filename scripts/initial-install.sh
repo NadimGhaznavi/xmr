@@ -165,10 +165,11 @@ create_environment_file() {
         'XMR_DB_HOST=localhost' \
         'XMR_DB_PORT=3306' \
         'XMR_DB_NAME=xmr' \
-        'XMR_DB_USER=xmr' >"$ENV_FILE"
+        'XMR_DB_USER=xmr' \
+        'XMR_P2POOL_PORT_MIN=20000' \
+        'XMR_P2POOL_PORT_MAX=29999' >"$ENV_FILE"
     printf 'XMR_DB_PASSWORD="%s"\n' "$escaped_password" >>"$ENV_FILE"
 
-    DB_PASSWORD=""
     escaped_password=""
 }
 
@@ -181,6 +182,12 @@ create_virtualenv() {
         "$BASE_DIR/venv/bin/pip" install \
             --requirement "$REPO_DIR/requirements.txt"
     fi
+}
+
+initialize_database() {
+    XMR_DB_PASSWORD="$DB_PASSWORD" \
+        "$BASE_DIR/venv/bin/python" "$BASE_DIR/web/xmrdb.py" migrate
+    DB_PASSWORD=""
 }
 
 install_systemd_service() {
@@ -229,6 +236,9 @@ main() {
 
     step "Creating Python virtual environment"
     create_virtualenv
+
+    step "Initializing database schema"
+    initialize_database
 
     step "Installing systemd service"
     install_systemd_service

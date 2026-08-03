@@ -29,6 +29,25 @@ remove_systemd_service() {
     systemctl reset-failed "$SERVICE_NAME" 2>/dev/null || true
 }
 
+reset_database() {
+    local python="$BASE_DIR/venv/bin/python"
+    local database_module="$BASE_DIR/web/xmrdb.py"
+    local environment_file="$BASE_DIR/etc/xmr.env"
+
+    # Installations that failed before database initialization have nothing to
+    # reset and may not contain a usable MariaDB connector.
+    if [[ ! -x "$python" || ! -f "$database_module" || ! -f "$environment_file" ]]; then
+        return
+    fi
+    if ! "$python" -c 'import mariadb' >/dev/null 2>&1; then
+        step "Remove database failed"
+        return
+    fi
+
+    step "Remove database"
+    "$python" "$database_module" reset --env-file "$environment_file"
+}
+
 restore_caddy_config() {
     if [[ -f "$CADDY_BACKUP" ]]; then
         install -o root -g root -m 0644 "$CADDY_BACKUP" "$CADDY_FILE"
@@ -52,6 +71,9 @@ main() {
 
     step "Removing systemd service"
     remove_systemd_service
+
+    step "Removing application database schema"
+    reset_database
 
     step "Restoring Caddy configuration"
     restore_caddy_config
