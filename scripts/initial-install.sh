@@ -10,6 +10,7 @@ readonly CADDY_CONFIG_DIR="/etc/caddy"
 readonly CADDY_FILE="$CADDY_CONFIG_DIR/Caddyfile"
 readonly CADDY_BACKUP="$BASE_DIR/etc/Caddyfile.before-xmr"
 readonly CADDY_ACTIVE_MARKER="$BASE_DIR/etc/caddy-was-active"
+readonly ENV_FILE="$BASE_DIR/etc/xmr.env"
 
 step() {
     printf '\n==> %s\n' "$1"
@@ -68,12 +69,26 @@ install_application() {
         "$BASE_DIR/web/server.py"
 
     install -o root -g root -m 0644 \
+        "$REPO_DIR/web/xmrdb.py" \
+        "$BASE_DIR/web/xmrdb.py"
+
+    install -o root -g root -m 0644 \
         "$REPO_DIR/web/static/index.html" \
         "$BASE_DIR/web/static/index.html"
 
     install -o root -g root -m 0644 \
         "$REPO_DIR/web/static/img/logo.png" \
         "$BASE_DIR/web/static/img/logo.png"
+}
+
+create_environment_file() {
+    install -o root -g "$SERVICE_GROUP" -m 0640 /dev/null "$ENV_FILE"
+    printf '%s\n' \
+        'XMR_DB_HOST=localhost' \
+        'XMR_DB_PORT=3306' \
+        'XMR_DB_NAME=xmr' \
+        'XMR_DB_USER=xmr' \
+        'XMR_DB_PASSWORD=' >"$ENV_FILE"
 }
 
 create_virtualenv() {
@@ -125,6 +140,9 @@ main() {
 
     step "Installing application"
     install_application
+
+    step "Creating private environment file"
+    create_environment_file
 
     step "Creating Python virtual environment"
     create_virtualenv
