@@ -50,6 +50,7 @@ create_directories() {
         "$BASE_DIR" \
         "$BASE_DIR/web" \
         "$BASE_DIR/web/static" \
+        "$BASE_DIR/web/static/img" \
         "$BASE_DIR/venv" \
         "$BASE_DIR/scripts"
 
@@ -69,6 +70,10 @@ install_application() {
     install -o root -g root -m 0644 \
         "$REPO_DIR/web/static/index.html" \
         "$BASE_DIR/web/static/index.html"
+
+    install -o root -g root -m 0644 \
+        "$REPO_DIR/web/static/img/logo.png" \
+        "$BASE_DIR/web/static/img/logo.png"
 }
 
 create_virtualenv() {
