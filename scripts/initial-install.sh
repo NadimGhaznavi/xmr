@@ -37,6 +37,7 @@ create_directories() {
     install -d -o root -g root -m 0755 \
         "$BASE_DIR" \
         "$BASE_DIR/web" \
+        "$BASE_DIR/web/static" \
         "$BASE_DIR/venv" \
         "$BASE_DIR/scripts"
 
@@ -52,6 +53,10 @@ install_application() {
     install -o root -g root -m 0644 \
         "$REPO_DIR/web/server.py" \
         "$BASE_DIR/web/server.py"
+
+    install -o root -g root -m 0644 \
+        "$REPO_DIR/web/static/index.html" \
+        "$BASE_DIR/web/static/index.html"
 }
 
 create_virtualenv() {
