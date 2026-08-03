@@ -1,0 +1,31 @@
+[Unit]
+Description=Bear and Moose XMR Server
+After=network-online.target mariadb.service
+Wants=network-online.target
+Requires=mariadb.service
+
+[Service]
+Type=simple
+User=xmr
+Group=xmr
+
+WorkingDirectory=/opt/xmr/web
+EnvironmentFile=-/opt/xmr/etc/xmr.env
+
+ExecStart=/opt/xmr/venv/bin/uvicorn server:app \
+    --host 127.0.0.1 \
+    --port 8000
+
+Restart=on-failure
+RestartSec=5
+
+UMask=0027
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/opt/xmr/data /opt/xmr/run
+
+[Install]
+WantedBy=multi-user.target
+
