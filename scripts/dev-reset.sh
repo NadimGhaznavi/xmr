@@ -40,11 +40,11 @@ reset_database() {
         return
     fi
     if ! "$python" -c 'import mariadb' >/dev/null 2>&1; then
-        step "Remove database failed"
+        step "Removing database failed"
         return
     fi
 
-    step "Remove database"
+    step "Removing database"
     "$python" "$database_module" reset --env-file "$environment_file"
 }
 
