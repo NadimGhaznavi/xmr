@@ -47,6 +47,36 @@ verify_dependencies() {
         { echo "ERROR: Caddy is not installed." >&2; exit 1; }
 }
 
+install_system_dependencies() {
+    if command -v mariadb_config >/dev/null 2>&1 && \
+        command -v cc >/dev/null 2>&1 && \
+        python3 -c 'import pathlib, sysconfig; assert (pathlib.Path(sysconfig.get_path("include")) / "Python.h").is_file()' \
+            >/dev/null 2>&1; then
+        return
+    fi
+
+    if ! command -v apt-get >/dev/null 2>&1; then
+        echo "ERROR: MariaDB Connector/C and a C compiler are required." >&2
+        echo "Install your distribution's MariaDB development, compiler," >&2
+        echo "and Python development packages, then run this script again." >&2
+        exit 1
+    fi
+
+    step "Installing MariaDB connector build dependencies"
+    apt-get update
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
+        build-essential \
+        libmariadb-dev \
+        python3-dev
+
+    command -v mariadb_config >/dev/null 2>&1 ||
+        { echo "ERROR: libmariadb-dev did not provide mariadb_config." >&2; exit 1; }
+
+    python3 -c 'import pathlib, sysconfig; assert (pathlib.Path(sysconfig.get_path("include")) / "Python.h").is_file()' \
+        >/dev/null 2>&1 ||
+        { echo "ERROR: python3-dev did not provide Python.h." >&2; exit 1; }
+}
+
 prompt_db_password() {
     local confirmation=""
 
@@ -185,6 +215,7 @@ main() {
     verify_service_account
     verify_install_target
     verify_dependencies
+    install_system_dependencies
     prompt_db_password
 
     step "Creating installation directories"
