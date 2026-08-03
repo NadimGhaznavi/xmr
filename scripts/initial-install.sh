@@ -11,6 +11,7 @@ readonly CADDY_FILE="$CADDY_CONFIG_DIR/Caddyfile"
 readonly CADDY_BACKUP="$BASE_DIR/etc/Caddyfile.before-xmr"
 readonly CADDY_ACTIVE_MARKER="$BASE_DIR/etc/caddy-was-active"
 readonly ENV_FILE="$BASE_DIR/etc/xmr.env"
+DB_PASSWORD=""
 
 step() {
     printf '\n==> %s\n' "$1"
@@ -44,6 +45,42 @@ verify_dependencies() {
 
     command -v caddy >/dev/null 2>&1 ||
         { echo "ERROR: Caddy is not installed." >&2; exit 1; }
+}
+
+prompt_db_password() {
+    local confirmation=""
+
+    # Do not expose the password if the script was invoked with shell tracing.
+    set +x
+
+    while true; do
+        printf 'MariaDB password for user %s: ' "$SERVICE_USER" >&2
+        if ! IFS= read -r -s DB_PASSWORD; then
+            printf '\nERROR: Unable to read the database password.\n' >&2
+            exit 1
+        fi
+        printf '\n' >&2
+
+        if [[ -z "$DB_PASSWORD" ]]; then
+            echo "ERROR: The database password cannot be empty." >&2
+            continue
+        fi
+
+        printf 'Confirm MariaDB password: ' >&2
+        if ! IFS= read -r -s confirmation; then
+            printf '\nERROR: Unable to read the password confirmation.\n' >&2
+            exit 1
+        fi
+        printf '\n' >&2
+
+        if [[ "$DB_PASSWORD" == "$confirmation" ]]; then
+            break
+        fi
+
+        DB_PASSWORD=""
+        confirmation=""
+        echo "ERROR: Passwords do not match; please try again." >&2
+    done
 }
 
 create_directories() {
@@ -82,13 +119,20 @@ install_application() {
 }
 
 create_environment_file() {
+    local escaped_password="$DB_PASSWORD"
+    escaped_password=${escaped_password//\\/\\\\}
+    escaped_password=${escaped_password//\"/\\\"}
+
     install -o root -g "$SERVICE_GROUP" -m 0640 /dev/null "$ENV_FILE"
     printf '%s\n' \
         'XMR_DB_HOST=localhost' \
         'XMR_DB_PORT=3306' \
         'XMR_DB_NAME=xmr' \
-        'XMR_DB_USER=xmr' \
-        'XMR_DB_PASSWORD=' >"$ENV_FILE"
+        'XMR_DB_USER=xmr' >"$ENV_FILE"
+    printf 'XMR_DB_PASSWORD="%s"\n' "$escaped_password" >>"$ENV_FILE"
+
+    DB_PASSWORD=""
+    escaped_password=""
 }
 
 create_virtualenv() {
@@ -134,6 +178,7 @@ main() {
     verify_service_account
     verify_install_target
     verify_dependencies
+    prompt_db_password
 
     step "Creating installation directories"
     create_directories
