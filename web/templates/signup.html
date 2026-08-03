@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Sign up · Bear and Moose XMR{% endblock %}
+{% block content %}
+    <h1>Create your account</h1>
+    <p class="lead">Connect your Monero wallet and start building your pool.</p>
+    <form method="post" action="/api/signup">
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" autocomplete="username" required>
+
+        <label for="wallet">Monero wallet address</label>
+        <input id="wallet" name="wallet" type="text" autocomplete="off" spellcheck="false" required>
+
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="new-password" required>
+
+        <button type="submit">Sign up</button>
+    </form>
+    <p class="alternate">Already registered? <a href="/login">Log in</a></p>
+{% endblock %}

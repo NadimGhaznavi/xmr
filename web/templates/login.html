@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Log in · Bear and Moose XMR{% endblock %}
+{% block content %}
+    <h1>Welcome back</h1>
+    <p class="lead">Log in to view your pool and worker activity.</p>
+    <form method="post" action="/api/login">
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" autocomplete="username" required>
+
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+
+        <button type="submit">Log in</button>
+    </form>
+    <p class="alternate">New here? <a href="/signup">Create an account</a></p>
+{% endblock %}

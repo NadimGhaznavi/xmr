@@ -6,6 +6,11 @@
         reverse_proxy 127.0.0.1:8000
     }
 
+    @account_pages path /login /signup
+    handle @account_pages {
+        reverse_proxy 127.0.0.1:8000
+    }
+
     handle {
         root * /opt/xmr/web/static
         file_server

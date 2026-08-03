@@ -44,6 +44,19 @@ class ServerTest(unittest.TestCase):
         self.assertEqual(response[0]["status"], 200)
         self.assertEqual(response[1]["body"], b"")
 
+    def test_login_renders_jinja_template(self) -> None:
+        response = self.request("/login")
+
+        self.assertEqual(response[0]["status"], 200)
+        self.assertIn(b"text/html", dict(response[0]["headers"])[b"content-type"])
+        self.assertIn(b'<form method="post" action="/api/login">', response[1]["body"])
+
+    def test_signup_renders_jinja_template(self) -> None:
+        response = self.request("/signup")
+
+        self.assertEqual(response[0]["status"], 200)
+        self.assertIn(b'Monero wallet address', response[1]["body"])
+
 
 if __name__ == "__main__":
     unittest.main()

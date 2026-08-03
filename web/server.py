@@ -4,11 +4,20 @@ from __future__ import annotations
 
 import json
 from collections.abc import Awaitable, Callable
+from pathlib import Path
 from typing import Any
+
+from jinja2 import Environment, FileSystemLoader, StrictUndefined, select_autoescape
 
 ASGIMessage = dict[str, Any]
 Receive = Callable[[], Awaitable[ASGIMessage]]
 Send = Callable[[ASGIMessage], Awaitable[None]]
+
+TEMPLATES = Environment(
+    loader=FileSystemLoader(Path(__file__).with_name("templates")),
+    autoescape=select_autoescape(("html", "xml")),
+    undefined=StrictUndefined,
+)
 
 
 async def _send_json(
@@ -39,6 +48,23 @@ async def _send_json(
     )
 
 
+async def _send_html(
+    send: Send, status: int, content: str, *, include_body: bool = True
+) -> None:
+    body = content.encode("utf-8")
+    await send(
+        {
+            "type": "http.response.start",
+            "status": status,
+            "headers": [
+                (b"content-type", b"text/html; charset=utf-8"),
+                (b"content-length", str(len(body)).encode("ascii")),
+            ],
+        }
+    )
+    await send({"type": "http.response.body", "body": body if include_body else b""})
+
+
 async def _handle_http(scope: dict[str, Any], send: Send) -> None:
     method = scope["method"].upper()
     path = scope["path"]
@@ -55,6 +81,10 @@ async def _handle_http(scope: dict[str, Any], send: Send) -> None:
     if path == "/health":
         status = 200
         payload = {"status": "ok"}
+    elif path in {"/login", "/signup"}:
+        template = TEMPLATES.get_template(f"{path[1:]}.html")
+        await _send_html(send, 200, template.render(), include_body=method != "HEAD")
+        return
     elif path == "/":
         status = 200
         payload = {"name": "Bear and Moose XMR API", "status": "ok"}
