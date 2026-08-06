@@ -3,15 +3,19 @@
 {% block content %}
     <h1>Create your account</h1>
     <p class="lead">Connect your Monero wallet and start building your pool.</p>
+    {% if form_error %}<p class="form-error" role="alert">{{ form_error }}</p>{% endif %}
     <form method="post" action="/api/signup">
         <label for="username">Username</label>
-        <input id="username" name="username" type="text" autocomplete="username" required>
+        <input id="username" name="username" type="text" autocomplete="username" value="{{ username }}" required>
+        {% if errors.get("username") %}<p class="error">{{ errors["username"] }}</p>{% endif %}
 
         <label for="wallet">Monero wallet address</label>
-        <input id="wallet" name="wallet" type="text" autocomplete="off" spellcheck="false" required>
+        <input id="wallet" name="wallet" type="text" autocomplete="off" spellcheck="false" value="{{ wallet }}" required>
+        {% if errors.get("wallet") %}<p class="error">{{ errors["wallet"] }}</p>{% endif %}
 
         <label for="password">Password</label>
         <input id="password" name="password" type="password" autocomplete="new-password" required>
+        {% if errors.get("password") %}<p class="error">{{ errors["password"] }}</p>{% endif %}
 
         <button type="submit">Sign up</button>
     </form>

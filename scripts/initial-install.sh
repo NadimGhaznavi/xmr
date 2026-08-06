@@ -120,6 +120,7 @@ create_directories() {
         "$BASE_DIR/web/static" \
         "$BASE_DIR/web/static/img" \
         "$BASE_DIR/web/templates" \
+        "$BASE_DIR/web/methods" \
         "$BASE_DIR/venv" \
         "$BASE_DIR/scripts"
 
@@ -139,6 +140,11 @@ install_application() {
     install -o root -g root -m 0644 \
         "$REPO_DIR/web/xmrdb.py" \
         "$BASE_DIR/web/xmrdb.py"
+
+    install -o root -g root -m 0644 \
+        "$REPO_DIR/web/methods/__init__.py" \
+        "$REPO_DIR/web/methods/new_acct.py" \
+        "$BASE_DIR/web/methods/"
 
     install -o root -g root -m 0644 \
         "$REPO_DIR/web/templates/base.html" \

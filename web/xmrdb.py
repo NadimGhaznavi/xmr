@@ -72,6 +72,10 @@ class PortRangeExhaustedError(RuntimeError):
     """Raised when no unassigned P2Pool port remains in the configured range."""
 
 
+class DuplicateAccountError(RuntimeError):
+    """Raised when an account conflicts with an existing unique value."""
+
+
 class Cursor(Protocol):
     description: Sequence[Sequence[Any]] | None
     lastrowid: int | None
@@ -301,26 +305,33 @@ class XMRDB:
         if not wallet_address or len(wallet_address) > 106:
             raise ValueError("wallet address must contain 1 to 106 characters")
 
-        with self.transaction() as session:
-            result = session.execute(
-                """
-                INSERT INTO accounts (username, password_hash, role)
-                VALUES (?, ?, 'user')
-                """,
-                (username, password_hash),
-            )
-            if result.last_insert_id is None:
-                raise RuntimeError("MariaDB did not return an account ID")
+        try:
+            with self.transaction() as session:
+                result = session.execute(
+                    """
+                    INSERT INTO accounts (username, password_hash, role)
+                    VALUES (?, ?, 'user')
+                    """,
+                    (username, password_hash),
+                )
+                if result.last_insert_id is None:
+                    raise RuntimeError("MariaDB did not return an account ID")
 
-            port = self._allocate_p2pool_port(session)
-            session.execute(
-                """
-                INSERT INTO miner_profiles
-                    (account_id, wallet_address, p2pool_port)
-                VALUES (?, ?, ?)
-                """,
-                (result.last_insert_id, wallet_address, port),
-            )
+                port = self._allocate_p2pool_port(session)
+                session.execute(
+                    """
+                    INSERT INTO miner_profiles
+                        (account_id, wallet_address, p2pool_port)
+                    VALUES (?, ?, ?)
+                    """,
+                    (result.last_insert_id, wallet_address, port),
+                )
+        except Exception as error:
+            if getattr(error, "errno", None) == 1062:
+                raise DuplicateAccountError(
+                    "username or wallet already exists"
+                ) from error
+            raise
 
         return CreatedMinerAccount(
             result.last_insert_id, username, wallet_address, port
