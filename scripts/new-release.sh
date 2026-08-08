@@ -1,11 +1,9 @@
 #!/bin/bash
-# update_version.sh - Automated version update script for AI Hydra
+# new-release.sh - Automated version update script for AI Hydra
 #
-# This script updates the version number across all relevant files in the AI Hydra project.
-# It ensures consistency across Python packages and documentation.
+# This script updates the version number accross the project files and pushes
+# a tagged release to GitHub. It then switches to a new git feature branch.
 #
-# Usage: ./update_version.sh <new_version>
-# Example: ./update_version.sh 0.6.0
 
 set -e  # Exit on any error
 
