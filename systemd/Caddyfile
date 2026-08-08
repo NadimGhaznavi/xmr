@@ -1,18 +1,18 @@
 :80 {
-    encode zstd gzip
+	encode zstd gzip
 
-    handle /api/* {
-        uri strip_prefix /api
-        reverse_proxy 127.0.0.1:8000
-    }
+	handle /api/* {
+		uri strip_prefix /api
+		reverse_proxy 127.0.0.1:8000
+	}
 
-    @account_pages path /login /signup
-    handle @account_pages {
-        reverse_proxy 127.0.0.1:8000
-    }
+	@account_pages path /login /signup
+	handle @account_pages {
+		reverse_proxy 127.0.0.1:8000
+	}
 
-    handle {
-        root * /opt/xmr/web/static
-        file_server
-    }
+	handle {
+		root * /opt/xmr/web/static
+		file_server
+	}
 }
