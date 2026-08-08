@@ -5,6 +5,7 @@ readonly BASE_DIR="/opt/xmr"
 readonly REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly SERVICE_USER="xmr"
 readonly SERVICE_GROUP="xmr"
+readonly SERVICE_NAME="xmr.service"
 readonly SERVICE_FILE="/etc/systemd/system/xmr.service"
 readonly CADDY_CONFIG_DIR="/etc/caddy"
 readonly CADDY_FILE="$CADDY_CONFIG_DIR/Caddyfile"
@@ -336,6 +337,11 @@ initialize_database() {
 
 configure_cluster_role() {
     if [[ "$CLUSTER_ROLE" == "hot" ]]; then
+        systemctl enable --now "$SERVICE_NAME"
+        systemctl is-active --quiet "$SERVICE_NAME" || {
+            echo "ERROR: $SERVICE_NAME failed to start." >&2
+            exit 1
+        }
         echo "Configured $(hostname -s) as the hot node."
         return
     fi
