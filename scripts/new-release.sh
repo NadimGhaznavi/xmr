@@ -10,7 +10,7 @@ set -e  # Exit on any error
 # ----- Project info -----
 PROJECT_NAME="XMR Pool"
 PROJECT_DIR="/opt/dev/xmr"
-DDEF_FILE="$PROJECT_DIR/constants/DDef.py"
+DDEF_FILE="$PROJECT_DIR/constants/DDefaults.py"
 
 # Colors for output
 RED='\033[0;31m'
