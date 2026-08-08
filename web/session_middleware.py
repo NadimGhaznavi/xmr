@@ -9,7 +9,10 @@ from typing import Any
 
 from mgr.SessMgr import SessMgr
 
-ASGIApp = Callable[[dict[str, Any], Callable[..., Awaitable[Any]], Callable[..., Awaitable[Any]]], Awaitable[None]]
+ASGIApp = Callable[
+    [dict[str, Any], Callable[..., Awaitable[Any]], Callable[..., Awaitable[Any]]],
+    Awaitable[None],
+]
 
 
 class ServerSessionMiddleware:
@@ -26,7 +29,12 @@ class ServerSessionMiddleware:
         self._sessions = sessions
         self._cookie_name = cookie_name
 
-    async def __call__(self, scope: dict[str, Any], receive: Callable[..., Awaitable[Any]], send: Callable[..., Awaitable[Any]]) -> None:
+    async def __call__(
+        self,
+        scope: dict[str, Any],
+        receive: Callable[..., Awaitable[Any]],
+        send: Callable[..., Awaitable[Any]],
+    ) -> None:
         if scope["type"] != "http":
             await self._app(scope, receive, send)
             return

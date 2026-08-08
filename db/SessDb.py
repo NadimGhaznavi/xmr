@@ -82,8 +82,14 @@ class SessDb:
               AND expires_at > ? AND absolute_expires_at > ?
             """,
             (
-                new_digest, account_id, now, expires_at, session_id,
-                old_digest, now, now,
+                new_digest,
+                account_id,
+                now,
+                expires_at,
+                session_id,
+                old_digest,
+                now,
+                now,
             ),
         )
         return result.affected_rows == 1

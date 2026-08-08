@@ -37,9 +37,7 @@ class DbMgr(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def execute(
-        self, statement: str, parameters: Sequence[Any] = ()
-    ) -> QueryResult:
+    def execute(self, statement: str, parameters: Sequence[Any] = ()) -> QueryResult:
         raise NotImplementedError
 
     @abstractmethod
