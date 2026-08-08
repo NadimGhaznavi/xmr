@@ -9,10 +9,10 @@ Type=simple
 User=xmr
 Group=xmr
 
-WorkingDirectory=/opt/xmr/web
+WorkingDirectory=/opt/xmr
 EnvironmentFile=-/opt/xmr/etc/xmr.env
 
-ExecStart=/opt/xmr/venv/bin/uvicorn server:app \
+ExecStart=/opt/xmr/venv/bin/uvicorn web.server:app \
     --host 127.0.0.1 \
     --port 8000
 
@@ -28,4 +28,3 @@ ReadWritePaths=/opt/xmr/data /opt/xmr/run
 
 [Install]
 WantedBy=multi-user.target
-
