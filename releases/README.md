@@ -8,3 +8,7 @@ one space, and a repository-relative path.
 - `.` means the file was unchanged in that release.
 
 Both kinds of entries are installed. The marker is informational.
+
+Operational scripts remain in the Git checkout under `/opt/dev/xmr/scripts`
+and must not appear in an installation manifest. Manifested application files
+are installed root-owned with read-only permissions under `/opt/xmr`.

@@ -9,6 +9,7 @@ readonly SSH_OPTIONS=(-o BatchMode=yes -o ConnectTimeout=10)
 usage() {
     echo "Usage:" >&2
     echo "  $0 status" >&2
+    echo "  $0 restart" >&2
     echo "  $0 failover-to <bama|wintermute>" >&2
     echo "  $0 promote" >&2
 }
@@ -149,12 +150,24 @@ promote() {
     echo "$node promoted successfully."
 }
 
+restart() {
+    [[ $EUID -eq 0 ]] || fail "This command must be run as root"
+    echo "Restarting $SERVICE on $(hostname -s)..."
+    systemctl restart "$SERVICE"
+    systemctl is-active --quiet "$SERVICE" || fail "$SERVICE failed to restart"
+    echo "$SERVICE restarted successfully."
+}
+
 [[ $# -ge 1 ]] || { usage; exit 1; }
 
 case "$1" in
     status)
         [[ $# -eq 1 ]] || { usage; exit 1; }
         status
+        ;;
+    restart)
+        [[ $# -eq 1 ]] || { usage; exit 1; }
+        restart
         ;;
     failover-to)
         [[ $# -eq 2 ]] || { usage; exit 1; }

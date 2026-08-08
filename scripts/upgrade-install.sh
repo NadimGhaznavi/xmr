@@ -32,12 +32,24 @@ for command in git tar install mktemp; do
 done
 
 cd "$REPO_DIR"
+git rev-parse --is-inside-work-tree >/dev/null 2>&1 ||
+    fail "$REPO_DIR is not a Git repository"
+git remote get-url "$REMOTE" >/dev/null 2>&1 ||
+    fail "Git remote is not configured: $REMOTE"
+[[ "$(git branch --show-current)" == "main" ]] ||
+    fail "The deployment repository must be on the main branch"
+[[ -z "$(git status --porcelain)" ]] ||
+    fail "The deployment repository has uncommitted changes"
 
 readonly TEMP_DIR="$(mktemp -d)"
 readonly RELEASE_REF="refs/xmr-upgrades/$TAG"
 trap 'rm -rf -- "$TEMP_DIR"' EXIT
 
-echo "Fetching $TAG from $REMOTE..."
+echo "Updating all remote branches and tags..."
+git fetch --all --prune --tags
+git pull --ff-only "$REMOTE" main
+
+echo "Fetching release $TAG from $REMOTE..."
 git fetch --no-tags "$REMOTE" "+refs/tags/$TAG:$RELEASE_REF"
 git rev-parse --verify --quiet "$RELEASE_REF^{commit}" >/dev/null ||
     fail "Tag not found: $TAG"
@@ -59,6 +71,8 @@ while IFS= read -r line || [[ -n "$line" ]]; do
     path="${BASH_REMATCH[2]}"
     [[ "$path" != /* && "$path" != ".." && "$path" != ../* && "$path" != */../* && "$path" != */.. ]] ||
         fail "Unsafe manifest path: $path"
+    [[ "$path" != scripts/* ]] ||
+        fail "Operational scripts are not installed under $BASE_DIR: $path"
     [[ -z "${SEEN[$path]+present}" ]] || fail "Duplicate manifest path: $path"
     git cat-file -e "$RELEASE_REF:$path" 2>/dev/null ||
         fail "Manifest file is absent from $TAG: $path"
@@ -80,9 +94,7 @@ echo "Changed files: $changed_count"
 echo "Installing into $BASE_DIR..."
 
 for path in "${FILES[@]}"; do
-    mode=0644
-    [[ "$path" == scripts/*.sh ]] && mode=0755
-    install -D -o root -g root -m "$mode" \
+    install -D -o root -g root -m 0644 \
         "$TEMP_DIR/release/$path" "$BASE_DIR/$path"
 done
 
