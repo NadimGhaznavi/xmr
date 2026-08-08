@@ -2,7 +2,7 @@
 {% block title %}Sign up · Bear and Moose XMR{% endblock %}
 {% block content %}
     <h1>Create your account</h1>
-    <p class="lead">Connect your Monero wallet and start building your pool.</p>
+    <p class="lead">Connect your Monero wallet and mining in your own p2pool instance.</p>
     {% if form_error %}<p class="form-error" role="alert">{{ form_error }}</p>{% endif %}
     <form method="post" action="/api/signup">
         <label for="username">Username</label>
