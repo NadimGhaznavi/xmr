@@ -15,6 +15,7 @@ readonly REPLICATION_CREDENTIAL_FILE="/root/.xmr"
 readonly REPLICATION_USER="replication_user"
 DB_PASSWORD=""
 REPLICATION_PASSWORD=""
+CLUSTER_ROLE=""
 
 step() {
     printf '\n==> %s\n' "$1"
@@ -152,6 +153,16 @@ prompt_replication_password() {
     done
 }
 
+prompt_cluster_role() {
+    while true; do
+        read -r -p "Cluster role for this node (hot/cold): " CLUSTER_ROLE
+        case "$CLUSTER_ROLE" in
+            hot|cold) return ;;
+            *) echo "ERROR: Role must be 'hot' or 'cold'." >&2 ;;
+        esac
+    done
+}
+
 create_directories() {
     install -d -o root -g root -m 0755 \
         "$BASE_DIR" \
@@ -263,18 +274,24 @@ create_virtualenv() {
 }
 
 initialize_database() {
-    if [[ "$(mariadb --batch --skip-column-names -e 'SELECT @@GLOBAL.read_only')" == "1" ]]; then
-        echo "MariaDB is read-only; schema will arrive through replication."
-        DB_PASSWORD=""
-        return
-    fi
-
+    mariadb -e 'SET GLOBAL read_only=OFF'
     (
         cd "$BASE_DIR"
         XMR_DB_PASSWORD="$DB_PASSWORD" "$BASE_DIR/venv/bin/python" -c \
             'from db.AcctDb import AcctDb; from db.SessDb import SessDb; AcctDb().initialize_schema(); SessDb().initialize_schema()'
     )
     DB_PASSWORD=""
+}
+
+configure_cluster_role() {
+    if [[ "$CLUSTER_ROLE" == "hot" ]]; then
+        echo "Configured $(hostname -s) as the hot node."
+        return
+    fi
+
+    local node
+    node=$(hostname -s)
+    printf 'demote %s\n' "$node" | "$REPO_DIR/scripts/cluster-mgr.sh" demote
 }
 
 install_systemd_service() {
@@ -310,6 +327,7 @@ main() {
     verify_install_target
     verify_dependencies
     install_system_dependencies
+    prompt_cluster_role
     prompt_db_password
     prompt_replication_password
 
@@ -333,6 +351,9 @@ main() {
 
     step "Installing systemd service"
     install_systemd_service
+
+    step "Configuring $CLUSTER_ROLE cluster role"
+    configure_cluster_role
 
     step "Installing Caddy configuration"
     install_caddy_config
