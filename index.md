@@ -5,6 +5,12 @@ author_profile: true
 
 ![Logo](/pages/img/logo.png)
 
+# Releases
+
+- [Releases](/releases/README.html)
+
+---
+
 # Use Cases
 
 ## System Operator
