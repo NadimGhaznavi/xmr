@@ -8,6 +8,15 @@ from .SessDb import SessDb
 from .XmrDb import DatabaseConfig, DatabaseConfigurationError, XmrDb
 
 __all__ = (
-    "AcctDb", "AcctDbConfig", "DatabaseConfig", "DatabaseConfigurationError", "DbMgr",
-    "DbSession", "MiningDb", "PoolDb", "QueryResult", "SessDb", "XmrDb",
+    "AcctDb",
+    "AcctDbConfig",
+    "DatabaseConfig",
+    "DatabaseConfigurationError",
+    "DbMgr",
+    "DbSession",
+    "MiningDb",
+    "PoolDb",
+    "QueryResult",
+    "SessDb",
+    "XmrDb",
 )

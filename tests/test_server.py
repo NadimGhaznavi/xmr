@@ -55,7 +55,7 @@ class ServerTest(unittest.TestCase):
         response = self.request("/signup")
 
         self.assertEqual(response[0]["status"], 200)
-        self.assertIn(b'Monero wallet address', response[1]["body"])
+        self.assertIn(b"Monero wallet address", response[1]["body"])
 
 
 if __name__ == "__main__":
