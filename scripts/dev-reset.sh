@@ -31,7 +31,7 @@ remove_systemd_service() {
 
 reset_database() {
     local python="$BASE_DIR/venv/bin/python"
-    local database_module="$BASE_DIR/web/xmrdb.py"
+    local database_module="$BASE_DIR/db/XmrDb.py"
     local environment_file="$BASE_DIR/etc/xmr.env"
 
     # Installations that failed before database initialization have nothing to
@@ -45,7 +45,12 @@ reset_database() {
     fi
 
     step "Removing database"
-    "$python" "$database_module" reset --env-file "$environment_file"
+    (
+        cd "$BASE_DIR"
+        "$python" -c \
+            'import sys; from db.AcctDb import AcctDb; from db.SessDb import SessDb; from db.XmrDb import DatabaseConfig, XmrDb; database = XmrDb(DatabaseConfig.from_env_file(sys.argv[1])); SessDb(database).reset_schema(); AcctDb(database).reset_schema()' \
+            "$environment_file"
+    )
 }
 
 restore_caddy_config() {
