@@ -1,4 +1,3 @@
-
 # constants/DDefaults.py
 #
 #    Bear & Moose XMR Mining Pool

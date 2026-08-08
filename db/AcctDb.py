@@ -119,7 +119,9 @@ class AcctDb:
         except Exception as error:
             self._translate_duplicate(error)
             raise
-        return CreatedMinerAccount(result.last_insert_id, username, wallet_address, port)
+        return CreatedMinerAccount(
+            result.last_insert_id, username, wallet_address, port
+        )
 
     def _allocate_p2pool_port(self, session: DbSession) -> int:
         allocator = session.fetch_one(
@@ -133,10 +135,13 @@ class AcctDb:
 
         candidate = max(int(allocator["next_port"]), self._config.p2pool_port_min)
         while candidate <= self._config.p2pool_port_max:
-            if session.fetch_one(
-                "SELECT account_id FROM miner_profiles WHERE p2pool_port = ?",
-                (candidate,),
-            ) is None:
+            if (
+                session.fetch_one(
+                    "SELECT account_id FROM miner_profiles WHERE p2pool_port = ?",
+                    (candidate,),
+                )
+                is None
+            ):
                 break
             candidate += 1
         if candidate > self._config.p2pool_port_max:
@@ -150,9 +155,7 @@ class AcctDb:
     @staticmethod
     def _translate_duplicate(error: Exception) -> None:
         if getattr(error, "errno", None) == 1062:
-            raise DuplicateAccountError(
-                "username or wallet already exists"
-            ) from error
+            raise DuplicateAccountError("username or wallet already exists") from error
 
 
 _SCHEMA = (

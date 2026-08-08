@@ -50,8 +50,12 @@ class SessMgr:
                 expires_at = min(now + self._idle_timeout, absolute_expiry)
                 if self._database.touch(int(row["id"]), now, expires_at):
                     return Session(
-                        int(row["id"]), token, row["account_id"],
-                        bool(row["authenticated"]), expires_at, absolute_expiry,
+                        int(row["id"]),
+                        token,
+                        row["account_id"],
+                        bool(row["authenticated"]),
+                        expires_at,
+                        absolute_expiry,
                     )
         return self._create(now)
 
@@ -62,14 +66,22 @@ class SessMgr:
         new_token = self._new_token()
         expires_at = min(now + self._idle_timeout, session.absolute_expires_at)
         changed = self._database.authenticate_and_rotate(
-            session.session_id, account_id, self._digest(session.token),
-            self._digest(new_token), now, expires_at,
+            session.session_id,
+            account_id,
+            self._digest(session.token),
+            self._digest(new_token),
+            now,
+            expires_at,
         )
         if not changed:
             raise RuntimeError("session expired or was revoked")
         return Session(
-            session.session_id, new_token, account_id, True,
-            expires_at, session.absolute_expires_at,
+            session.session_id,
+            new_token,
+            account_id,
+            True,
+            expires_at,
+            session.absolute_expires_at,
         )
 
     def revoke(self, token: str) -> None:
@@ -85,9 +97,7 @@ class SessMgr:
         session_id = self._database.create(
             self._digest(token), now, expires_at, absolute_expiry
         )
-        return Session(
-            session_id, token, None, False, expires_at, absolute_expiry
-        )
+        return Session(session_id, token, None, False, expires_at, absolute_expiry)
 
     def _digest(self, token: str) -> bytes:
         return hmac.new(self._secret, token.encode("ascii"), hashlib.sha256).digest()
@@ -98,4 +108,8 @@ class SessMgr:
 
     @staticmethod
     def _valid_token_shape(token: str) -> bool:
-        return 40 <= len(token) <= 64 and token.isascii() and token.replace("-", "").replace("_", "").isalnum()
+        return (
+            40 <= len(token) <= 64
+            and token.isascii()
+            and token.replace("-", "").replace("_", "").isalnum()
+        )

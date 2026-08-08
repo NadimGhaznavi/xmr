@@ -48,9 +48,7 @@ class DatabaseConfig:
     connect_timeout: int = 10
 
     @classmethod
-    def from_env(
-        cls, environment: Mapping[str, str] | None = None
-    ) -> "DatabaseConfig":
+    def from_env(cls, environment: Mapping[str, str] | None = None) -> "DatabaseConfig":
         env = os.environ if environment is None else environment
         password = env.get("XMR_DB_PASSWORD", "")
         if not password:
@@ -88,9 +86,7 @@ class XmrDbSession:
     def __init__(self, connection: Connection) -> None:
         self._connection = connection
 
-    def execute(
-        self, statement: str, parameters: Sequence[Any] = ()
-    ) -> QueryResult:
+    def execute(self, statement: str, parameters: Sequence[Any] = ()) -> QueryResult:
         with _cursor(self._connection) as cursor:
             cursor.execute(statement, parameters)
             return QueryResult(cursor.rowcount, cursor.lastrowid)
@@ -135,9 +131,7 @@ class XmrDb(DbMgr):
         finally:
             connection.close()
 
-    def execute(
-        self, statement: str, parameters: Sequence[Any] = ()
-    ) -> QueryResult:
+    def execute(self, statement: str, parameters: Sequence[Any] = ()) -> QueryResult:
         with self.transaction() as session:
             return session.execute(statement, parameters)
 
@@ -216,6 +210,6 @@ def _as_dict(cursor: Cursor, row: Sequence[Any]) -> dict[str, Any]:
 
 
 def _mariadb_connector(**options: Any) -> Connection:
-    import mariadb
+    import mariadb  # type: ignore[import-not-found]
 
     return mariadb.connect(**options)

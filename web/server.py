@@ -72,7 +72,10 @@ async def _send_redirect(send: Send, location: str) -> None:
         {
             "type": "http.response.start",
             "status": 303,
-            "headers": [(b"location", location.encode("ascii")), (b"content-length", b"0")],
+            "headers": [
+                (b"location", location.encode("ascii")),
+                (b"content-length", b"0"),
+            ],
         }
     )
     await send({"type": "http.response.body", "body": b""})
@@ -103,10 +106,10 @@ def _render_signup(**context: Any) -> str:
 
 
 async def _handle_signup(receive: Receive, send: Send) -> None:
-    from application.new_acct import (
+    from mgr.AcctMgr import (
         AccountAlreadyExistsError,
         AccountValidationError,
-        NewAccount,
+        AcctMgr,
     )
 
     try:
@@ -125,7 +128,9 @@ async def _handle_signup(receive: Receive, send: Send) -> None:
     wallet = values.get("wallet", [""])[0]
 
     try:
-        await asyncio.to_thread(NewAccount().execute, username, password, wallet)
+        await asyncio.to_thread(
+            AcctMgr().create_miner_account, username, password, wallet
+        )
     except AccountValidationError as error:
         await _send_html(
             send,
@@ -156,7 +161,7 @@ async def _handle_http(scope: dict[str, Any], receive: Receive, send: Send) -> N
     method = scope["method"].upper()
     path = scope["path"]
 
-    if method == "POST" and path == "/signup":
+    if method == "POST" and path == "/api/signup":
         await _handle_signup(receive, send)
         return
 

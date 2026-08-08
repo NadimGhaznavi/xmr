@@ -218,7 +218,6 @@ create_directories() {
         "$BASE_DIR/db" \
         "$BASE_DIR/mgr" \
         "$BASE_DIR/web" \
-        "$BASE_DIR/web/application" \
         "$BASE_DIR/web/static" \
         "$BASE_DIR/web/static/img" \
         "$BASE_DIR/web/templates" \
@@ -263,10 +262,6 @@ install_application() {
         "$REPO_DIR/web/server.py" \
         "$REPO_DIR/web/session_middleware.py" \
         "$BASE_DIR/web/"
-
-    install -o root -g root -m 0644 \
-        "$REPO_DIR/web/application/__init__.py" \
-        "$BASE_DIR/web/application/__init__.py"
 
     install -o root -g root -m 0644 \
         "$REPO_DIR/web/templates/base.html" \
