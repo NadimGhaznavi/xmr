@@ -163,6 +163,53 @@ prompt_cluster_role() {
     done
 }
 
+load_existing_credentials() {
+    [[ -f "$REPLICATION_CREDENTIAL_FILE" ]] || return 1
+    [[ "$(stat -c '%U:%G:%a' "$REPLICATION_CREDENTIAL_FILE")" == "root:root:600" ]] || {
+        echo "ERROR: $REPLICATION_CREDENTIAL_FILE must be owned by root:root with mode 0600." >&2
+        return 1
+    }
+
+    local answer line key value db_user="" replication_user=""
+    read -r -p "Use credentials from $REPLICATION_CREDENTIAL_FILE? (y/N): " answer
+    [[ "$answer" =~ ^[Yy]$ ]] || return 1
+
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        [[ -z "$line" || "${line:0:1}" == "#" ]] && continue
+        [[ "$line" == *=* ]] || {
+            echo "ERROR: Invalid entry in $REPLICATION_CREDENTIAL_FILE." >&2
+            return 1
+        }
+        key="${line%%=*}"
+        value="${line#*=}"
+        case "$key" in
+            XMR_DB_USER) db_user="$value" ;;
+            XMR_DB_PASSWORD) DB_PASSWORD="$value" ;;
+            XMR_REPLICATION_USER) replication_user="$value" ;;
+            XMR_REPLICATION_PASSWORD) REPLICATION_PASSWORD="$value" ;;
+            *)
+                echo "ERROR: Unknown setting in $REPLICATION_CREDENTIAL_FILE: $key" >&2
+                return 1
+                ;;
+        esac
+    done <"$REPLICATION_CREDENTIAL_FILE"
+
+    [[ -z "$db_user" || "$db_user" == "$SERVICE_USER" ]] || {
+        echo "ERROR: Unexpected database user in $REPLICATION_CREDENTIAL_FILE." >&2
+        return 1
+    }
+    [[ "$replication_user" == "$REPLICATION_USER" ]] || {
+        echo "ERROR: Unexpected replication user in $REPLICATION_CREDENTIAL_FILE." >&2
+        return 1
+    }
+    [[ -n "$REPLICATION_PASSWORD" ]] || {
+        echo "ERROR: Replication password missing from $REPLICATION_CREDENTIAL_FILE." >&2
+        return 1
+    }
+    [[ -n "$DB_PASSWORD" ]] || DB_PASSWORD="$REPLICATION_PASSWORD"
+    echo "Using credentials from $REPLICATION_CREDENTIAL_FILE."
+}
+
 create_directories() {
     install -d -o root -g root -m 0755 \
         "$BASE_DIR" \
@@ -255,8 +302,12 @@ create_environment_file() {
 
 create_replication_credential_file() {
     install -o root -g root -m 0600 /dev/null "$REPLICATION_CREDENTIAL_FILE"
-    printf 'XMR_REPLICATION_USER=%s\n' "$REPLICATION_USER" \
+    printf 'XMR_DB_USER=%s\n' "$SERVICE_USER" \
         >"$REPLICATION_CREDENTIAL_FILE"
+    printf 'XMR_DB_PASSWORD=%s\n' "$DB_PASSWORD" \
+        >>"$REPLICATION_CREDENTIAL_FILE"
+    printf 'XMR_REPLICATION_USER=%s\n' "$REPLICATION_USER" \
+        >>"$REPLICATION_CREDENTIAL_FILE"
     printf 'XMR_REPLICATION_PASSWORD=%s\n' "$REPLICATION_PASSWORD" \
         >>"$REPLICATION_CREDENTIAL_FILE"
     REPLICATION_PASSWORD=""
@@ -329,8 +380,10 @@ main() {
     verify_dependencies
     install_system_dependencies
     prompt_cluster_role
-    prompt_db_password
-    prompt_replication_password
+    if ! load_existing_credentials; then
+        prompt_db_password
+        prompt_replication_password
+    fi
 
     step "Creating installation directories"
     create_directories
