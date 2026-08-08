@@ -11,7 +11,10 @@ readonly CADDY_FILE="$CADDY_CONFIG_DIR/Caddyfile"
 readonly CADDY_BACKUP="$BASE_DIR/etc/Caddyfile.before-xmr"
 readonly CADDY_ACTIVE_MARKER="$BASE_DIR/etc/caddy-was-active"
 readonly ENV_FILE="$BASE_DIR/etc/xmr.env"
+readonly REPLICATION_CREDENTIAL_FILE="/root/.xmr"
+readonly REPLICATION_USER="replication_user"
 DB_PASSWORD=""
+REPLICATION_PASSWORD=""
 
 step() {
     printf '\n==> %s\n' "$1"
@@ -113,6 +116,42 @@ prompt_db_password() {
     done
 }
 
+prompt_replication_password() {
+    local confirmation=""
+
+    # Do not expose the password if the script was invoked with shell tracing.
+    set +x
+
+    while true; do
+        printf 'MariaDB replication password for user %s: ' "$REPLICATION_USER" >&2
+        if ! IFS= read -r -s REPLICATION_PASSWORD; then
+            printf '\nERROR: Unable to read the replication password.\n' >&2
+            exit 1
+        fi
+        printf '\n' >&2
+
+        if [[ -z "$REPLICATION_PASSWORD" ]]; then
+            echo "ERROR: The replication password cannot be empty." >&2
+            continue
+        fi
+
+        printf 'Confirm MariaDB replication password: ' >&2
+        if ! IFS= read -r -s confirmation; then
+            printf '\nERROR: Unable to read the replication password confirmation.\n' >&2
+            exit 1
+        fi
+        printf '\n' >&2
+
+        if [[ "$REPLICATION_PASSWORD" == "$confirmation" ]]; then
+            break
+        fi
+
+        REPLICATION_PASSWORD=""
+        confirmation=""
+        echo "ERROR: Passwords do not match; please try again." >&2
+    done
+}
+
 create_directories() {
     install -d -o root -g root -m 0755 \
         "$BASE_DIR" \
@@ -203,6 +242,15 @@ create_environment_file() {
     escaped_password=""
 }
 
+create_replication_credential_file() {
+    install -o root -g root -m 0600 /dev/null "$REPLICATION_CREDENTIAL_FILE"
+    printf 'XMR_REPLICATION_USER=%s\n' "$REPLICATION_USER" \
+        >"$REPLICATION_CREDENTIAL_FILE"
+    printf 'XMR_REPLICATION_PASSWORD=%s\n' "$REPLICATION_PASSWORD" \
+        >>"$REPLICATION_CREDENTIAL_FILE"
+    REPLICATION_PASSWORD=""
+}
+
 create_virtualenv() {
     python3 -m venv "$BASE_DIR/venv"
 
@@ -257,6 +305,7 @@ main() {
     verify_dependencies
     install_system_dependencies
     prompt_db_password
+    prompt_replication_password
 
     step "Creating installation directories"
     create_directories
@@ -266,6 +315,9 @@ main() {
 
     step "Creating private environment file"
     create_environment_file
+
+    step "Creating private replication credential file"
+    create_replication_credential_file
 
     step "Creating Python virtual environment"
     create_virtualenv
