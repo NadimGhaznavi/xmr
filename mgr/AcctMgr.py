@@ -6,14 +6,13 @@ import re
 from dataclasses import dataclass
 from typing import Protocol
 
-from db.AcctDb import (
+from db.AppDb import (
     AccountRole,
-    AcctDb,
+    AppDb,
     CreatedAccount,
     CreatedMinerAccount,
     DuplicateAccountError,
 )
-
 
 USERNAME_PATTERN = re.compile(
     r"(?:[A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9_-]{0,30}[A-Za-z0-9])\Z"
@@ -55,11 +54,11 @@ class AcctMgr:
 
     def __init__(
         self,
-        database: AcctDb | AccountStore | None = None,
+        database: AppDb | AccountStore | None = None,
         *,
         password_hasher: Hasher | None = None,
     ) -> None:
-        self._database = database or AcctDb()
+        self._database = database or AppDb()
         self._password_hasher = password_hasher or _default_password_hasher()
 
     def create_account(

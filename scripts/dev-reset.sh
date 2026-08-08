@@ -59,7 +59,7 @@ reset_database() {
     (
         cd "$BASE_DIR"
         "$python" -c \
-            'import sys; from db.AcctDb import AcctDb; from db.SessDb import SessDb; from db.XmrDb import DatabaseConfig, XmrDb; database = XmrDb(DatabaseConfig.from_env_file(sys.argv[1])); SessDb(database).reset_schema(); AcctDb(database).reset_schema()' \
+            'import sys; from db.AppDb import AppDb; from db.SessDb import SessDb; from db.XmrDb import DatabaseConfig, XmrDb; database = XmrDb(DatabaseConfig.from_env_file(sys.argv[1])); SessDb(database).reset_schema(); AppDb(database).reset_schema()' \
             "$environment_file"
     )
 }
