@@ -311,7 +311,7 @@ create_and_switch_branch "$RELEASE_BRANCH"
 # Update VERSION in db4e/constants/DDef.py
 update_file_version "$DDEF_FILE" \
     "s/VERSION: Final\[str\] = \"[0-9]+\.[0-9]+\.[0-9]+\"/VERSION: Final[str] = \"$NEW_VERSION\"/" \
-    "db4e/constants/DDef version"
+    \"$DDEF_FILE\" " version"
 
 # Update documentation conf.py
 #if [ -f "docs/_source/conf.py" ]; then
