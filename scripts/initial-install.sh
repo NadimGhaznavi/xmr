@@ -317,6 +317,7 @@ install_caddy_config() {
         "$REPO_DIR/systemd/Caddyfile" \
         "$CADDY_FILE"
 
+    caddy fmt --overwrite "$CADDY_FILE"
     caddy validate --config "$CADDY_FILE"
     systemctl reload-or-restart caddy.service
 }
