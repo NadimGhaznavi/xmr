@@ -3,8 +3,12 @@ set -euo pipefail
 
 readonly BASE_DIR="/opt/xmr"
 readonly SERVICE="xmr.service"
+readonly CREDENTIAL_FILE="/root/.xmr"
 readonly NODES=(bama wintermute)
 readonly SSH_OPTIONS=(-o BatchMode=yes -o ConnectTimeout=10)
+
+XMR_REPLICATION_USER=""
+XMR_REPLICATION_PASSWORD=""
 
 usage() {
     echo "Usage:" >&2
@@ -12,6 +16,7 @@ usage() {
     echo "  $0 restart" >&2
     echo "  $0 failover-to <bama|wintermute>" >&2
     echo "  $0 promote" >&2
+    echo "  $0 demote" >&2
 }
 
 fail() {
@@ -25,6 +30,37 @@ valid_node() {
 
 peer_of() {
     [[ "$1" == "bama" ]] && echo wintermute || echo bama
+}
+
+load_replication_credentials() {
+    [[ -f "$CREDENTIAL_FILE" ]] || fail "Missing $CREDENTIAL_FILE"
+    [[ "$(stat -c '%U:%G:%a' "$CREDENTIAL_FILE")" == "root:root:600" ]] ||
+        fail "$CREDENTIAL_FILE must be owned by root:root with mode 0600"
+
+    local line key value
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        [[ -z "$line" || "${line:0:1}" == "#" ]] && continue
+        [[ "$line" == *=* ]] || fail "Invalid entry in $CREDENTIAL_FILE"
+        key="${line%%=*}"
+        value="${line#*=}"
+        case "$key" in
+            XMR_REPLICATION_USER) XMR_REPLICATION_USER="$value" ;;
+            XMR_REPLICATION_PASSWORD) XMR_REPLICATION_PASSWORD="$value" ;;
+            *) fail "Unknown setting in $CREDENTIAL_FILE: $key" ;;
+        esac
+    done <"$CREDENTIAL_FILE"
+
+    [[ "$XMR_REPLICATION_USER" =~ ^[A-Za-z0-9_]+$ ]] ||
+        fail "Invalid replication user in $CREDENTIAL_FILE"
+    [[ -n "$XMR_REPLICATION_PASSWORD" ]] ||
+        fail "Missing replication password in $CREDENTIAL_FILE"
+}
+
+sql_string() {
+    local value=$1
+    value=${value//\\/\\\\}
+    value=${value//\'/\'\'}
+    printf "'%s'" "$value"
 }
 
 remote() {
@@ -150,6 +186,50 @@ promote() {
     echo "$node promoted successfully."
 }
 
+demote() {
+    local node peer user_sql password_sql output
+    node=$(hostname -s)
+    valid_node "$node" || fail "This host is not bama or wintermute: $node"
+    [[ $EUID -eq 0 ]] || fail "This command must be run as root"
+    peer=$(peer_of "$node")
+    load_replication_credentials
+    user_sql=$(sql_string "$XMR_REPLICATION_USER")
+    password_sql=$(sql_string "$XMR_REPLICATION_PASSWORD")
+
+    echo "Demoting $node will stop $SERVICE and replicate MariaDB from $peer."
+    read -r -p "Type 'demote $node' to continue: " confirmation
+    [[ "$confirmation" == "demote $node" ]] || fail "Demotion cancelled"
+
+    systemctl stop "$SERVICE"
+    mariadb -e 'SET GLOBAL read_only=ON'
+    [[ "$(mariadb --batch --skip-column-names -e 'SELECT @@GLOBAL.read_only')" == "1" ]] ||
+        fail "MariaDB is not read-only"
+
+    mariadb -e 'STOP SLAVE' 2>/dev/null || true
+    mariadb -e 'RESET SLAVE ALL'
+    mariadb -e "
+        CHANGE MASTER TO
+            MASTER_HOST='$peer',
+            MASTER_USER=$user_sql,
+            MASTER_PASSWORD=$password_sql,
+            MASTER_DEMOTE_TO_SLAVE=1,
+            MASTER_SSL=1,
+            MASTER_SSL_VERIFY_SERVER_CERT=1;
+        START SLAVE;
+    "
+
+    for _ in {1..10}; do
+        output=$(mariadb -e 'SHOW SLAVE STATUS\G')
+        if grep -q 'Slave_IO_Running: Yes' <<<"$output" &&
+           grep -q 'Slave_SQL_Running: Yes' <<<"$output"; then
+            echo "$node demoted successfully and replicating from $peer."
+            return
+        fi
+        sleep 1
+    done
+    fail "MariaDB replication did not start on $node"
+}
+
 restart() {
     [[ $EUID -eq 0 ]] || fail "This command must be run as root"
     echo "Restarting $SERVICE on $(hostname -s)..."
@@ -176,6 +256,10 @@ case "$1" in
     promote)
         [[ $# -eq 1 ]] || { usage; exit 1; }
         promote
+        ;;
+    demote)
+        [[ $# -eq 1 ]] || { usage; exit 1; }
+        demote
         ;;
     *)
         usage
