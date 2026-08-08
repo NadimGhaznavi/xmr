@@ -12,4 +12,4 @@ from typing import Final
 
 
 class DDef:
-    VERSION: Final[str] = "0.0.1"
+    VERSION: Final[str] = "0.0.4"
