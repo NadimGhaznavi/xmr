@@ -18,6 +18,9 @@ class SessDb:
     def initialize_schema(self) -> None:
         self._database.execute(_SESSION_SCHEMA)
 
+    def reset_schema(self) -> None:
+        self._database.execute("DROP TABLE IF EXISTS sessions")
+
     def find_active(self, token_digest: bytes, now: datetime) -> dict[str, Any] | None:
         return self._database.fetch_one(
             """

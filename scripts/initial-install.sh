@@ -116,13 +116,15 @@ prompt_db_password() {
 create_directories() {
     install -d -o root -g root -m 0755 \
         "$BASE_DIR" \
+        "$BASE_DIR/constants" \
+        "$BASE_DIR/db" \
+        "$BASE_DIR/mgr" \
         "$BASE_DIR/web" \
+        "$BASE_DIR/web/application" \
         "$BASE_DIR/web/static" \
         "$BASE_DIR/web/static/img" \
         "$BASE_DIR/web/templates" \
-        "$BASE_DIR/web/methods" \
-        "$BASE_DIR/venv" \
-        "$BASE_DIR/scripts"
+        "$BASE_DIR/venv"
 
     install -d -o root -g "$SERVICE_GROUP" -m 0750 \
         "$BASE_DIR/etc"
@@ -134,17 +136,39 @@ create_directories() {
 
 install_application() {
     install -o root -g root -m 0644 \
+        "$REPO_DIR/requirements.txt" \
+        "$BASE_DIR/requirements.txt"
+
+    install -o root -g root -m 0644 \
+        "$REPO_DIR/constants/DDefaults.py" \
+        "$BASE_DIR/constants/DDefaults.py"
+
+    install -o root -g root -m 0644 \
+        "$REPO_DIR/db/__init__.py" \
+        "$REPO_DIR/db/AcctDb.py" \
+        "$REPO_DIR/db/DbMgr.py" \
+        "$REPO_DIR/db/MiningDb.py" \
+        "$REPO_DIR/db/PoolDb.py" \
+        "$REPO_DIR/db/SessDb.py" \
+        "$REPO_DIR/db/XmrDb.py" \
+        "$BASE_DIR/db/"
+
+    install -o root -g root -m 0644 \
+        "$REPO_DIR/mgr/__init__.py" \
+        "$REPO_DIR/mgr/AcctMgr.py" \
+        "$REPO_DIR/mgr/MiningMgr.py" \
+        "$REPO_DIR/mgr/PoolMgr.py" \
+        "$REPO_DIR/mgr/SessMgr.py" \
+        "$BASE_DIR/mgr/"
+
+    install -o root -g root -m 0644 \
         "$REPO_DIR/web/server.py" \
-        "$BASE_DIR/web/server.py"
+        "$REPO_DIR/web/session_middleware.py" \
+        "$BASE_DIR/web/"
 
     install -o root -g root -m 0644 \
-        "$REPO_DIR/web/xmrdb.py" \
-        "$BASE_DIR/web/xmrdb.py"
-
-    install -o root -g root -m 0644 \
-        "$REPO_DIR/web/methods/__init__.py" \
-        "$REPO_DIR/web/methods/new_acct.py" \
-        "$BASE_DIR/web/methods/"
+        "$REPO_DIR/web/application/__init__.py" \
+        "$BASE_DIR/web/application/__init__.py"
 
     install -o root -g root -m 0644 \
         "$REPO_DIR/web/templates/base.html" \
@@ -191,8 +215,11 @@ create_virtualenv() {
 }
 
 initialize_database() {
-    XMR_DB_PASSWORD="$DB_PASSWORD" \
-        "$BASE_DIR/venv/bin/python" "$BASE_DIR/web/xmrdb.py" migrate
+    (
+        cd "$BASE_DIR"
+        XMR_DB_PASSWORD="$DB_PASSWORD" "$BASE_DIR/venv/bin/python" -c \
+            'from db.AcctDb import AcctDb; from db.SessDb import SessDb; AcctDb().initialize_schema(); SessDb().initialize_schema()'
+    )
     DB_PASSWORD=""
 }
 
