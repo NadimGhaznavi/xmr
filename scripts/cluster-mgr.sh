@@ -3,13 +3,11 @@ set -euo pipefail
 
 readonly BASE_DIR="/opt/xmr"
 readonly SERVICE="xmr.service"
-readonly CREDENTIAL_FILE="/root/.xmr"
+readonly CLUSTER_SCRIPT="/opt/dev/xmr/scripts/cluster-mgr.sh"
+readonly DB_SCRIPT="/opt/dev/xmr/scripts/db-mgr.sh"
 readonly NODES=(bama wintermute)
 readonly SSH_OPTIONS=(-o BatchMode=yes -o ConnectTimeout=10)
 readonly LOCAL_NODE="$(hostname -s)"
-
-XMR_REPLICATION_USER=""
-XMR_REPLICATION_PASSWORD=""
 
 usage() {
     echo "Usage:" >&2
@@ -33,37 +31,6 @@ peer_of() {
     [[ "$1" == "bama" ]] && echo wintermute || echo bama
 }
 
-load_replication_credentials() {
-    [[ -f "$CREDENTIAL_FILE" ]] || fail "Missing $CREDENTIAL_FILE"
-    [[ "$(stat -c '%U:%G:%a' "$CREDENTIAL_FILE")" == "root:root:600" ]] ||
-        fail "$CREDENTIAL_FILE must be owned by root:root with mode 0600"
-
-    local line key value
-    while IFS= read -r line || [[ -n "$line" ]]; do
-        [[ -z "$line" || "${line:0:1}" == "#" ]] && continue
-        [[ "$line" == *=* ]] || fail "Invalid entry in $CREDENTIAL_FILE"
-        key="${line%%=*}"
-        value="${line#*=}"
-        case "$key" in
-            XMR_REPLICATION_USER) XMR_REPLICATION_USER="$value" ;;
-            XMR_REPLICATION_PASSWORD) XMR_REPLICATION_PASSWORD="$value" ;;
-            *) fail "Unknown setting in $CREDENTIAL_FILE: $key" ;;
-        esac
-    done <"$CREDENTIAL_FILE"
-
-    [[ "$XMR_REPLICATION_USER" =~ ^[A-Za-z0-9_]+$ ]] ||
-        fail "Invalid replication user in $CREDENTIAL_FILE"
-    [[ -n "$XMR_REPLICATION_PASSWORD" ]] ||
-        fail "Missing replication password in $CREDENTIAL_FILE"
-}
-
-sql_string() {
-    local value=$1
-    value=${value//\\/\\\\}
-    value=${value//\'/\'\'}
-    printf "'%s'" "$value"
-}
-
 remote() {
     local node=$1
     shift
@@ -84,24 +51,11 @@ service_on() {
 }
 
 db_role_on() {
-    local read_only
-    read_only=$(remote "$1" "mariadb --batch --skip-column-names -e 'SELECT @@GLOBAL.read_only'")
-    [[ "$read_only" == "0" ]] && echo primary || echo replica
+    remote "$1" "'$DB_SCRIPT' role"
 }
 
 replication_on() {
-    local output
-    output=$(remote "$1" "mariadb -e 'SHOW SLAVE STATUS\\G'" 2>/dev/null || true)
-    if [[ -z "$output" ]]; then
-        echo n/a
-    elif grep -q 'Slave_IO_Running: Yes' <<<"$output" &&
-         grep -q 'Slave_SQL_Running: Yes' <<<"$output"; then
-        local lag
-        lag=$(sed -n 's/^[[:space:]]*Seconds_Behind_Master: //p' <<<"$output")
-        echo "healthy, ${lag:-unknown}s lag"
-    else
-        echo unhealthy
-    fi
+    remote "$1" "'$DB_SCRIPT' replication"
 }
 
 status() {
@@ -135,12 +89,11 @@ status() {
 }
 
 replica_caught_up() {
-    local node=$1
-    local output
-    output=$(remote "$node" "mariadb -e 'SHOW SLAVE STATUS\\G'")
-    grep -q 'Slave_IO_Running: Yes' <<<"$output" &&
-        grep -q 'Slave_SQL_Running: Yes' <<<"$output" &&
-        grep -q 'Seconds_Behind_Master: 0' <<<"$output"
+    remote "$1" "'$DB_SCRIPT' replica-caught-up"
+}
+
+replica_healthy() {
+    remote "$1" "'$DB_SCRIPT' replica-healthy"
 }
 
 failover_to() {
@@ -153,6 +106,10 @@ failover_to() {
     read -r -p "Type '$target' to continue: " confirmation
     [[ "$confirmation" == "$target" ]] || fail "Failover cancelled"
 
+    echo "Checking MariaDB replication on $target..."
+    replica_healthy "$target" ||
+        fail "$target is not a healthy MariaDB replica; no services were changed"
+
     echo "Stopping application on $source..."
     remote "$source" "systemctl stop '$SERVICE'"
 
@@ -164,10 +121,14 @@ failover_to() {
     replica_caught_up "$target" || fail "MariaDB replica did not catch up"
 
     echo "Making MariaDB on $source read-only..."
-    remote "$source" "mariadb -e 'SET GLOBAL read_only=ON'"
+    remote "$source" "'$DB_SCRIPT' set-read-only"
 
     echo "Promoting MariaDB on $target..."
-    remote "$target" "mariadb -e 'STOP SLAVE; RESET SLAVE ALL; SET GLOBAL read_only=OFF'"
+    remote "$target" "'$DB_SCRIPT' promote"
+
+    echo "Configuring $source as the new replica..."
+    remote "$source" \
+        "printf 'demote $source\\n' | '$CLUSTER_SCRIPT' demote"
 
     echo "Starting application on $target..."
     remote "$target" "systemctl start '$SERVICE'"
@@ -186,65 +147,26 @@ promote() {
     read -r -p "Type 'promote $node' to continue: " confirmation
     [[ "$confirmation" == "promote $node" ]] || fail "Promotion cancelled"
 
-    mariadb -e 'STOP SLAVE; RESET SLAVE ALL; SET GLOBAL read_only=OFF'
+    "$DB_SCRIPT" promote
     systemctl start "$SERVICE"
     systemctl is-active --quiet "$SERVICE" || fail "$SERVICE failed to start"
     echo "$node promoted successfully."
 }
 
 demote() {
-    local node peer user_sql password_sql primary_position output
+    local node peer
     node=$(hostname -s)
     valid_node "$node" || fail "This host is not bama or wintermute: $node"
     [[ $EUID -eq 0 ]] || fail "This command must be run as root"
     peer=$(peer_of "$node")
-    load_replication_credentials
-    user_sql=$(sql_string "$XMR_REPLICATION_USER")
-    password_sql=$(sql_string "$XMR_REPLICATION_PASSWORD")
 
     echo "Demoting $node will stop $SERVICE and replicate MariaDB from $peer."
     read -r -p "Type 'demote $node' to continue: " confirmation
     [[ "$confirmation" == "demote $node" ]] || fail "Demotion cancelled"
 
     systemctl stop "$SERVICE"
-    mariadb -e 'SET GLOBAL read_only=ON'
-    [[ "$(mariadb --batch --skip-column-names -e 'SELECT @@GLOBAL.read_only')" == "1" ]] ||
-        fail "MariaDB is not read-only"
-
-    primary_position=$(remote "$peer" \
-        "mariadb --batch --skip-column-names -e 'SELECT @@GLOBAL.gtid_current_pos'")
-    [[ "$primary_position" =~ ^[0-9]+-[0-9]+-[0-9]+(,[0-9]+-[0-9]+-[0-9]+)*$ ]] ||
-        fail "Unable to determine the GTID position on $peer"
-
-    mariadb -e 'STOP SLAVE' 2>/dev/null || true
-    mariadb -e 'RESET SLAVE ALL'
-    mariadb -e "SET GLOBAL gtid_slave_pos='$primary_position'"
-    mariadb -e "
-        CHANGE MASTER TO
-            MASTER_HOST='$peer',
-            MASTER_USER=$user_sql,
-            MASTER_PASSWORD=$password_sql,
-            MASTER_USE_GTID=slave_pos,
-            MASTER_SSL=1,
-            MASTER_SSL_VERIFY_SERVER_CERT=1;
-        START SLAVE;
-    "
-
-    for _ in {1..10}; do
-        output=$(mariadb -e 'SHOW SLAVE STATUS\G')
-        if grep -q 'Slave_IO_Running: Yes' <<<"$output" &&
-           grep -q 'Slave_SQL_Running: Yes' <<<"$output"; then
-            echo "$node demoted successfully and replicating from $peer."
-            return
-        fi
-        sleep 1
-    done
-    sed -n \
-        -e '/Slave_IO_Running:/p' \
-        -e '/Slave_SQL_Running:/p' \
-        -e '/Last_IO_Error:/p' \
-        -e '/Last_SQL_Error:/p' <<<"$output" >&2
-    fail "MariaDB replication did not start on $node"
+    "$DB_SCRIPT" demote-to "$peer"
+    echo "$node demoted successfully and replicating from $peer."
 }
 
 restart() {
