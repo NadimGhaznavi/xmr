@@ -193,7 +193,7 @@ promote() {
 }
 
 demote() {
-    local node peer user_sql password_sql output
+    local node peer user_sql password_sql primary_position output
     node=$(hostname -s)
     valid_node "$node" || fail "This host is not bama or wintermute: $node"
     [[ $EUID -eq 0 ]] || fail "This command must be run as root"
@@ -211,14 +211,20 @@ demote() {
     [[ "$(mariadb --batch --skip-column-names -e 'SELECT @@GLOBAL.read_only')" == "1" ]] ||
         fail "MariaDB is not read-only"
 
+    primary_position=$(remote "$peer" \
+        "mariadb --batch --skip-column-names -e 'SELECT @@GLOBAL.gtid_current_pos'")
+    [[ "$primary_position" =~ ^[0-9]+-[0-9]+-[0-9]+(,[0-9]+-[0-9]+-[0-9]+)*$ ]] ||
+        fail "Unable to determine the GTID position on $peer"
+
     mariadb -e 'STOP SLAVE' 2>/dev/null || true
     mariadb -e 'RESET SLAVE ALL'
+    mariadb -e "SET GLOBAL gtid_slave_pos='$primary_position'"
     mariadb -e "
         CHANGE MASTER TO
             MASTER_HOST='$peer',
             MASTER_USER=$user_sql,
             MASTER_PASSWORD=$password_sql,
-            MASTER_DEMOTE_TO_SLAVE=1,
+            MASTER_USE_GTID=slave_pos,
             MASTER_SSL=1,
             MASTER_SSL_VERIFY_SERVER_CERT=1;
         START SLAVE;
@@ -233,6 +239,11 @@ demote() {
         fi
         sleep 1
     done
+    sed -n \
+        -e '/Slave_IO_Running:/p' \
+        -e '/Slave_SQL_Running:/p' \
+        -e '/Last_IO_Error:/p' \
+        -e '/Last_SQL_Error:/p' <<<"$output" >&2
     fail "MariaDB replication did not start on $node"
 }
 

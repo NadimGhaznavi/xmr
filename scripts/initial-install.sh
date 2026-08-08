@@ -263,6 +263,12 @@ create_virtualenv() {
 }
 
 initialize_database() {
+    if [[ "$(mariadb --batch --skip-column-names -e 'SELECT @@GLOBAL.read_only')" == "1" ]]; then
+        echo "MariaDB is read-only; schema will arrive through replication."
+        DB_PASSWORD=""
+        return
+    fi
+
     (
         cd "$BASE_DIR"
         XMR_DB_PASSWORD="$DB_PASSWORD" "$BASE_DIR/venv/bin/python" -c \
