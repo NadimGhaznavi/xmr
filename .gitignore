@@ -3,6 +3,9 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+# Local XMR credentials
+.xmr
+
 # C extensions
 *.so
 
