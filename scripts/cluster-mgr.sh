@@ -6,6 +6,7 @@ readonly SERVICE="xmr.service"
 readonly CREDENTIAL_FILE="/root/.xmr"
 readonly NODES=(bama wintermute)
 readonly SSH_OPTIONS=(-o BatchMode=yes -o ConnectTimeout=10)
+readonly LOCAL_NODE="$(hostname -s)"
 
 XMR_REPLICATION_USER=""
 XMR_REPLICATION_PASSWORD=""
@@ -66,6 +67,11 @@ sql_string() {
 remote() {
     local node=$1
     shift
+    if [[ "$node" == "$LOCAL_NODE" ]]; then
+        [[ $# -eq 1 ]] || fail "Local command must be supplied as one argument"
+        bash -c "$1"
+        return
+    fi
     ssh "${SSH_OPTIONS[@]}" "root@$node" "$@"
 }
 
