@@ -2,7 +2,7 @@
 # update_version.sh - Automated version update script for AI Hydra
 #
 # This script updates the version number across all relevant files in the AI Hydra project.
-# It ensures consistency across pyproject.toml, Python packages, and documentation.
+# It ensures consistency across Python packages and documentation.
 #
 # Usage: ./update_version.sh <new_version>
 # Example: ./update_version.sh 0.6.0
@@ -84,7 +84,7 @@ commit_and_push_branch() {
         print_warning "No changes to commit on $branch"
     else
         print_status "Committing changes on $branch..."
-        git add pyproject.toml "$DDEF_FILE" CHANGELOG.md
+        git add "$DDEF_FILE" CHANGELOG.md
         git commit -m "$commit_message"
         print_success "✓ Committed changes on $branch"
     fi
@@ -284,15 +284,6 @@ fi
 
 print_status "Updating $PROJECT_NAME version to $NEW_VERSION..."
 
-# Check if we're in the right directory
-if [ ! -f "pyproject.toml" ]; then
-    print_error "pyproject.toml not found. Please run this script from the project root directory."
-    exit 1
-fi
-
-# Get current pyproject version for comparison
-CURRENT_VERSION=$(grep "version = " pyproject.toml | head -1 | sed 's/.*version = "\([^"]*\)".*/\1/')
-print_status "Current version: $CURRENT_VERSION"
 print_status "New version: $NEW_VERSION"
 
 # Get current git branch
@@ -319,11 +310,6 @@ merge_branch "$CURRENT_BRANCH" "Merge $RELEASE_COMMENT into dev"
 RELEASE_BRANCH="release/v$NEW_VERSION"
 create_and_switch_branch "$RELEASE_BRANCH"
 
-# Update pyproject.toml
-update_file_version "pyproject.toml" \
-    "s/version = \"[0-9]+\.[0-9]+\.[0-9]+\"/version = \"$NEW_VERSION\"/" \
-    "primary version (pyproject.toml)"
-
 # Update VERSION in db4e/constants/DDef.py
 update_file_version "$DDEF_FILE" \
     "s/VERSION: Final\[str\] = \"[0-9]+\.[0-9]+\.[0-9]+\"/VERSION: Final[str] = \"$NEW_VERSION\"/" \
@@ -348,12 +334,6 @@ print_success "Version update complete!"
 print_status "Verifying version consistency..."
 echo ""
 echo "=== Version Verification ==="
-
-# Check pyproject.toml
-if [ -f "pyproject.toml" ]; then
-    echo "📄 pyproject.toml:"
-    grep "version.*=" pyproject.toml | head -1
-fi
 
 # Check DDef VERSION constant
 if [ -f "$DDEF_FILE" ]; then
