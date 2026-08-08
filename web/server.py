@@ -1,201 +1,49 @@
-"""ASGI entry point for the Bear and Moose XMR backend."""
+"""Lean ASGI route dispatcher for the Bear and Moose XMR backend."""
 
 from __future__ import annotations
 
-import asyncio
-import json
 from collections.abc import Awaitable, Callable
-from pathlib import Path
 from typing import Any
-from urllib.parse import parse_qs
 
-from jinja2 import Environment, FileSystemLoader, StrictUndefined, select_autoescape
+from web.Interface import Handler, Route, compile_dispatch, compile_route
 
 ASGIMessage = dict[str, Any]
 Receive = Callable[[], Awaitable[ASGIMessage]]
 Send = Callable[[ASGIMessage], Awaitable[None]]
+ROUTE_DEFINITIONS = {
+    ("GET", "/"): Route("AppMgr:index"),
+    ("HEAD", "/"): Route("AppMgr:index"),
+    ("GET", "/health"): Route("AppMgr:health"),
+    ("HEAD", "/health"): Route("AppMgr:health"),
+    ("GET", "/login"): Route("AppMgr:login", "login.html"),
+    ("HEAD", "/login"): Route("AppMgr:login", "login.html"),
+    ("GET", "/signup"): Route("AppMgr:signup", "signup.html"),
+    ("HEAD", "/signup"): Route("AppMgr:signup", "signup.html"),
+}
+ACTION_DEFINITIONS = {
+    "AppMgr:new_account": Route("AppMgr:new_account", "signup.html", blocking=True),
+}
 
-TEMPLATES = Environment(
-    loader=FileSystemLoader(Path(__file__).with_name("templates")),
-    autoescape=select_autoescape(("html", "xml")),
-    undefined=StrictUndefined,
-)
-
-
-async def _send_json(
-    send: Send,
-    status: int,
-    payload: dict[str, Any],
-    *,
-    include_body: bool = True,
-) -> None:
-    body = json.dumps(payload, separators=(",", ":")).encode("utf-8")
-    headers = [
-        (b"content-type", b"application/json"),
-        (b"content-length", str(len(body)).encode("ascii")),
-    ]
-
-    await send(
-        {
-            "type": "http.response.start",
-            "status": status,
-            "headers": headers,
-        }
-    )
-    await send(
-        {
-            "type": "http.response.body",
-            "body": body if include_body else b"",
-        }
-    )
+ROUTES: dict[tuple[str, str], Handler] = {
+    route: compile_route(definition) for route, definition in ROUTE_DEFINITIONS.items()
+}
+ROUTES[("POST", "/api")] = compile_dispatch(ACTION_DEFINITIONS)
+NOT_FOUND = compile_route(Route("AppMgr:not_found"))
+METHOD_NOT_ALLOWED = compile_route(Route("AppMgr:method_not_allowed"))
+KNOWN_PATHS = {path for _, path in ROUTES}
 
 
-async def _send_html(
-    send: Send, status: int, content: str, *, include_body: bool = True
-) -> None:
-    body = content.encode("utf-8")
-    await send(
-        {
-            "type": "http.response.start",
-            "status": status,
-            "headers": [
-                (b"content-type", b"text/html; charset=utf-8"),
-                (b"content-length", str(len(body)).encode("ascii")),
-            ],
-        }
-    )
-    await send({"type": "http.response.body", "body": body if include_body else b""})
-
-
-async def _send_redirect(send: Send, location: str) -> None:
-    await send(
-        {
-            "type": "http.response.start",
-            "status": 303,
-            "headers": [
-                (b"location", location.encode("ascii")),
-                (b"content-length", b"0"),
-            ],
-        }
-    )
-    await send({"type": "http.response.body", "body": b""})
-
-
-async def _read_request_body(receive: Receive, *, limit: int = 16_384) -> bytes:
-    body = bytearray()
-    while True:
-        message = await receive()
-        if message["type"] != "http.request":
-            continue
-        body.extend(message.get("body", b""))
-        if len(body) > limit:
-            raise ValueError("request body is too large")
-        if not message.get("more_body", False):
-            return bytes(body)
-
-
-def _render_signup(**context: Any) -> str:
-    defaults: dict[str, Any] = {
-        "errors": {},
-        "form_error": "",
-        "username": "",
-        "wallet": "",
-    }
-    defaults.update(context)
-    return TEMPLATES.get_template("signup.html").render(**defaults)
-
-
-async def _handle_signup(receive: Receive, send: Send) -> None:
-    from mgr.AcctMgr import (
-        AccountAlreadyExistsError,
-        AccountValidationError,
-        AcctMgr,
-    )
-
-    try:
-        raw_body = await _read_request_body(receive)
-        values = parse_qs(
-            raw_body.decode("utf-8"), keep_blank_values=True, max_num_fields=10
-        )
-    except (UnicodeDecodeError, ValueError):
-        await _send_html(
-            send, 400, _render_signup(form_error="Invalid signup request.")
-        )
-        return
-
-    username = values.get("username", [""])[0]
-    password = values.get("password", [""])[0]
-    wallet = values.get("wallet", [""])[0]
-
-    try:
-        await asyncio.to_thread(
-            AcctMgr().create_miner_account, username, password, wallet
-        )
-    except AccountValidationError as error:
-        await _send_html(
-            send,
-            422,
-            _render_signup(
-                errors=error.errors,
-                username=username,
-                wallet=wallet,
-            ),
-        )
-        return
-    except AccountAlreadyExistsError:
-        await _send_html(
-            send,
-            409,
-            _render_signup(
-                form_error="That username or wallet is already registered.",
-                username=username,
-                wallet=wallet,
-            ),
-        )
-        return
-
-    await _send_redirect(send, "/login?created=1")
-
-
-async def _handle_http(scope: dict[str, Any], receive: Receive, send: Send) -> None:
-    method = scope["method"].upper()
-    path = scope["path"]
-
-    if method == "POST" and path == "/api/signup":
-        await _handle_signup(receive, send)
-        return
-
-    if method not in {"GET", "HEAD"}:
-        await _send_json(
-            send,
-            405,
-            {"error": "method_not_allowed"},
-            include_body=method != "HEAD",
-        )
-        return
-
-    if path == "/health":
-        status = 200
-        payload = {"status": "ok"}
-    elif path in {"/login", "/signup"}:
-        template = TEMPLATES.get_template(f"{path[1:]}.html")
-        content = _render_signup() if path == "/signup" else template.render()
-        await _send_html(send, 200, content, include_body=method != "HEAD")
-        return
-    elif path == "/":
-        status = 200
-        payload = {"name": "Bear and Moose XMR API", "status": "ok"}
-    else:
-        status = 404
-        payload = {"error": "not_found"}
-
-    await _send_json(send, status, payload, include_body=method != "HEAD")
+async def _route(scope: dict[str, Any], receive: Receive, send: Send) -> None:
+    route = (str(scope["method"]).upper(), str(scope["path"]))
+    handler = ROUTES.get(route)
+    if handler is None:
+        handler = METHOD_NOT_ALLOWED if route[1] in KNOWN_PATHS else NOT_FOUND
+    await handler(scope, receive, send)
 
 
 async def _handle_lifespan(receive: Receive, send: Send) -> None:
     while True:
         message = await receive()
-
         if message["type"] == "lifespan.startup":
             await send({"type": "lifespan.startup.complete"})
         elif message["type"] == "lifespan.shutdown":
@@ -204,9 +52,9 @@ async def _handle_lifespan(receive: Receive, send: Send) -> None:
 
 
 async def app(scope: dict[str, Any], receive: Receive, send: Send) -> None:
-    """Serve the backend API using the ASGI protocol."""
+    """Dispatch an ASGI request."""
 
-    if scope["type"] == "lifespan":
+    if scope["type"] == "http":
+        await _route(scope, receive, send)
+    elif scope["type"] == "lifespan":
         await _handle_lifespan(receive, send)
-    elif scope["type"] == "http":
-        await _handle_http(scope, receive, send)

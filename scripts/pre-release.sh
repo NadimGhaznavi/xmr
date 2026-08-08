@@ -44,6 +44,12 @@ main() {
     require_command black
     run_check "Checking formatting" check_formatting
 
+    require_command isort
+    run_check "Checking import order" isort --check-only "${PYTHON_PATHS[@]}"
+
+    require_command flake8
+    run_check "Linting" flake8 "${PYTHON_PATHS[@]}"
+
     require_command mypy
     run_check "Checking types" mypy "${PYTHON_PATHS[@]}"
 

@@ -242,23 +242,22 @@ install_application() {
 
     install -o root -g root -m 0644 \
         "$REPO_DIR/db/__init__.py" \
-        "$REPO_DIR/db/AcctDb.py" \
+        "$REPO_DIR/db/AppDb.py" \
         "$REPO_DIR/db/DbMgr.py" \
-        "$REPO_DIR/db/MiningDb.py" \
-        "$REPO_DIR/db/PoolDb.py" \
         "$REPO_DIR/db/SessDb.py" \
         "$REPO_DIR/db/XmrDb.py" \
         "$BASE_DIR/db/"
 
     install -o root -g root -m 0644 \
         "$REPO_DIR/mgr/__init__.py" \
+        "$REPO_DIR/mgr/AppMgr.py" \
         "$REPO_DIR/mgr/AcctMgr.py" \
-        "$REPO_DIR/mgr/MiningMgr.py" \
-        "$REPO_DIR/mgr/PoolMgr.py" \
         "$REPO_DIR/mgr/SessMgr.py" \
         "$BASE_DIR/mgr/"
 
     install -o root -g root -m 0644 \
+        "$REPO_DIR/web/__init__.py" \
+        "$REPO_DIR/web/Interface.py" \
         "$REPO_DIR/web/server.py" \
         "$REPO_DIR/web/session_middleware.py" \
         "$BASE_DIR/web/"
@@ -325,7 +324,7 @@ initialize_database() {
     (
         cd "$BASE_DIR"
         XMR_DB_PASSWORD="$DB_PASSWORD" "$BASE_DIR/venv/bin/python" -c \
-            'from db.AcctDb import AcctDb; from db.SessDb import SessDb; AcctDb().initialize_schema(); SessDb().initialize_schema()'
+            'from db.AppDb import AppDb; from db.SessDb import SessDb; AppDb().initialize_schema(); SessDb().initialize_schema()'
     )
     DB_PASSWORD=""
 }

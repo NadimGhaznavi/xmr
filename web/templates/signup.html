@@ -4,7 +4,9 @@
     <h1>Create your account</h1>
     <p class="lead">Connect your Monero wallet and mining in your own p2pool instance.</p>
     {% if form_error %}<p class="form-error" role="alert">{{ form_error }}</p>{% endif %}
-    <form method="post" action="/api/signup">
+    <form method="post" action="/api">
+        <input type="hidden" name="MODULE" value="AppMgr">
+        <input type="hidden" name="METHOD" value="new_account">
         <label for="username">Username</label>
         <input id="username" name="username" type="text" autocomplete="username" value="{{ username }}" required>
         {% if errors.get("username") %}<p class="error">{{ errors["username"] }}</p>{% endif %}

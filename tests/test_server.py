@@ -4,7 +4,6 @@ import json
 import unittest
 from pathlib import Path
 
-
 SERVER_PATH = Path(__file__).parents[1] / "web" / "server.py"
 SPEC = importlib.util.spec_from_file_location("server", SERVER_PATH)
 assert SPEC is not None and SPEC.loader is not None
