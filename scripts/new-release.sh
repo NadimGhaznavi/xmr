@@ -1,16 +1,19 @@
 #!/bin/bash
-# new-release.sh - Automated version update script for AI Hydra
+# new-release.sh - Automated release script for XMR Pool
 #
-# This script updates the version number accross the project files and pushes
+# This script updates the version number across the project files and pushes
 # a tagged release to GitHub. It then switches to a new git feature branch.
 #
 
-set -e  # Exit on any error
+set -euo pipefail
 
 # ----- Project info -----
-PROJECT_NAME="XMR Pool"
-PROJECT_DIR="/opt/dev/xmr"
-DDEF_FILE="$PROJECT_DIR/constants/DDefaults.py"
+readonly PROJECT_NAME="XMR Pool"
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+readonly DDEF_FILE="$PROJECT_DIR/constants/DDefaults.py"
+
+cd "$PROJECT_DIR"
 
 # Colors for output
 RED='\033[0;31m'
@@ -308,10 +311,15 @@ merge_branch "$CURRENT_BRANCH" "Merge $RELEASE_COMMENT into dev"
 RELEASE_BRANCH="release/v$NEW_VERSION"
 create_and_switch_branch "$RELEASE_BRANCH"
 
-# Update VERSION in db4e/constants/DDef.py
+# Update the XMR version constant
 update_file_version "$DDEF_FILE" \
-    "s/VERSION: Final\[str\] = \"[0-9]+\.[0-9]+\.[0-9]+\"/VERSION: Final[str] = \"$NEW_VERSION\"/" \
-    \"$DDEF_FILE\" " version"
+    "s/XMR_VERSION: Final\[str\] = \"[0-9]+\.[0-9]+\.[0-9]+\"/XMR_VERSION: Final[str] = \"$NEW_VERSION\"/" \
+    "XMR version"
+
+if ! grep -Eq "^[[:space:]]*XMR_VERSION: Final\[str\] = \"$NEW_VERSION\"$" "$DDEF_FILE"; then
+    print_error "XMR_VERSION was not updated to $NEW_VERSION in $DDEF_FILE"
+    exit 1
+fi
 
 # Update documentation conf.py
 #if [ -f "docs/_source/conf.py" ]; then
@@ -333,10 +341,10 @@ print_status "Verifying version consistency..."
 echo ""
 echo "=== Version Verification ==="
 
-# Check DDef VERSION constant
+# Check the XMR_VERSION constant
 if [ -f "$DDEF_FILE" ]; then
-    echo "🐍 db4e/constants/DDef.py:"
-    grep "DB4E_VERSION" db4e/constants/DDef.py | head -1
+    echo "🐍 constants/DDefaults.py:"
+    grep "XMR_VERSION" "$DDEF_FILE" | head -1
 fi
 
 # Check documentation
