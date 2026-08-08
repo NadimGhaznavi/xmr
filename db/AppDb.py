@@ -37,12 +37,12 @@ class CreatedMinerAccount:
 
 
 @dataclass(frozen=True, slots=True)
-class AcctDbConfig:
+class AppDbConfig:
     p2pool_port_min: int = 20000
     p2pool_port_max: int = 29999
 
     @classmethod
-    def from_env(cls, environment: Mapping[str, str] | None = None) -> "AcctDbConfig":
+    def from_env(cls, environment: Mapping[str, str] | None = None) -> "AppDbConfig":
         env = os.environ if environment is None else environment
         try:
             port_min = int(env.get("XMR_P2POOL_PORT_MIN", "20000"))
@@ -54,17 +54,17 @@ class AcctDbConfig:
         return cls(port_min, port_max)
 
 
-class AcctDb:
-    """Translate account persistence requests into SQL for ``XmrDb``."""
+class AppDb:
+    """Application persistence operations backed by ``XmrDb``."""
 
     def __init__(
         self,
         database: DbMgr | None = None,
         *,
-        config: AcctDbConfig | None = None,
+        config: AppDbConfig | None = None,
     ) -> None:
         self._database = database or XmrDb()
-        self._config = config or AcctDbConfig.from_env()
+        self._config = config or AppDbConfig.from_env()
 
     def initialize_schema(self) -> None:
         for statement in _SCHEMA:
@@ -190,5 +190,6 @@ _SCHEMA = (
         CONSTRAINT chk_p2pool_port_allocator_singleton CHECK (singleton_id = 1)
     ) ENGINE=InnoDB
     """,
-    "INSERT IGNORE INTO p2pool_port_allocator (singleton_id, next_port) VALUES (1, 1024)",
+    "INSERT IGNORE INTO p2pool_port_allocator (singleton_id, next_port) "
+    "VALUES (1, 1024)",
 )

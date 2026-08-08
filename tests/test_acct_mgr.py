@@ -2,13 +2,12 @@
 
 import unittest
 
+from db.AppDb import CreatedMinerAccount, DuplicateAccountError
 from mgr.AcctMgr import (
     AccountAlreadyExistsError,
     AccountValidationError,
     AcctMgr,
 )
-from db.AcctDb import CreatedMinerAccount, DuplicateAccountError
-
 
 VALID_WALLET = "4" + ("1" * 94)
 
