@@ -44,6 +44,17 @@ reset_database() {
         return
     fi
 
+    if [[ "$(mariadb --batch --skip-column-names -e 'SELECT @@GLOBAL.read_only')" == "1" ]]; then
+        step "Switching replica MariaDB to read/write"
+        mariadb -e 'STOP SLAVE' 2>/dev/null || true
+        mariadb -e 'RESET SLAVE ALL'
+        mariadb -e 'SET GLOBAL read_only=OFF'
+        [[ "$(mariadb --batch --skip-column-names -e 'SELECT @@GLOBAL.read_only')" == "0" ]] || {
+            echo "ERROR: MariaDB is still read-only." >&2
+            exit 1
+        }
+    fi
+
     step "Removing database"
     (
         cd "$BASE_DIR"
