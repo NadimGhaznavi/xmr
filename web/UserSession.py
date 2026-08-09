@@ -9,7 +9,8 @@ from typing import Any
 from db.SessDb import SessDb
 from mgr.SessMgr import SessMgr
 
-COOKIE_NAME = "__Host-xmr_session"
+SECURE_COOKIE_NAME = "__Host-xmr_session"
+HTTP_COOKIE_NAME = "xmr_session"
 
 
 class UserSession:
@@ -27,15 +28,16 @@ class UserSession:
         session = self._sessions.get_authenticated(token)
         return None if session is None else session.account_id
 
-    def authenticate(self, account_id: int) -> bytes:
+    def authenticate(self, account_id: int, *, secure: bool) -> bytes:
         anonymous = self._sessions.get_or_create(None)
         session = self._sessions.authenticate(anonymous, account_id)
         cookie = SimpleCookie()
-        cookie[COOKIE_NAME] = session.token
-        morsel = cookie[COOKIE_NAME]
+        cookie_name = SECURE_COOKIE_NAME if secure else HTTP_COOKIE_NAME
+        cookie[cookie_name] = session.token
+        morsel = cookie[cookie_name]
         morsel["path"] = "/"
         morsel["max-age"] = "1800"
-        morsel["secure"] = True
+        morsel["secure"] = secure
         morsel["httponly"] = True
         morsel["samesite"] = "Lax"
         return morsel.OutputString().encode("ascii")
@@ -50,6 +52,9 @@ def _read_cookie(scope: dict[str, Any]) -> str | None:
             cookie.load(value.decode("ascii"))
         except (UnicodeDecodeError, ValueError):
             return None
-        morsel = cookie.get(COOKIE_NAME)
-        return None if morsel is None else morsel.value
+        for cookie_name in (SECURE_COOKIE_NAME, HTTP_COOKIE_NAME):
+            morsel = cookie.get(cookie_name)
+            if morsel is not None:
+                return morsel.value
+        return None
     return None
