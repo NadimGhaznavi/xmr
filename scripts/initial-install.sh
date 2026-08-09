@@ -372,6 +372,14 @@ configure_cluster_role() {
         return
     fi
 
+    # This is a newly initialized cold node. Its schema setup created local
+    # GTIDs that are not part of the hot node's history. Discard that initial
+    # binlog before adopting the hot node's replication position.
+    mariadb -e 'STOP SLAVE' 2>/dev/null || true
+    mariadb -e 'RESET SLAVE ALL'
+    mariadb -e 'RESET MASTER'
+    mariadb -e "SET GLOBAL gtid_slave_pos = ''"
+
     local node
     node=$(hostname -s)
     printf 'demote %s\n' "$node" | "$REPO_DIR/scripts/cluster-mgr.sh" demote
