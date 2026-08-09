@@ -256,6 +256,11 @@ load_existing_credentials() {
         echo "ERROR: Invalid or missing XMR_ADMIN_USER." >&2
         return 1
     }
+    [[ "$admin_user" != "root" && "$admin_user" != "$SERVICE_USER" && \
+       "$admin_user" != "$REPLICATION_USER" ]] || {
+        echo "ERROR: XMR_ADMIN_USER must identify a separate service account." >&2
+        return 1
+    }
     [[ -n "$ADMIN_DB_PASSWORD" ]] || {
         echo "ERROR: XMR_ADMIN_PASSWORD is missing." >&2
         return 1
@@ -425,16 +430,19 @@ provision_database() {
     mariadb -e "
         CREATE DATABASE IF NOT EXISTS xmr
             CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-        CREATE USER IF NOT EXISTS 'xmr'@'localhost' IDENTIFIED BY $db_password_sql;
-        ALTER USER 'xmr'@'localhost' IDENTIFIED BY $db_password_sql;
-        GRANT ALL PRIVILEGES ON xmr.* TO 'xmr'@'localhost';
+        DROP USER IF EXISTS 'xmr'@'localhost';
+        DROP USER IF EXISTS $admin_user_sql@'localhost';
+        CREATE USER IF NOT EXISTS 'xmr' IDENTIFIED BY $db_password_sql;
+        ALTER USER 'xmr' IDENTIFIED BY $db_password_sql;
         CREATE USER IF NOT EXISTS 'replication_user'
             IDENTIFIED BY $replication_password_sql;
         ALTER USER 'replication_user' IDENTIFIED BY $replication_password_sql;
+        CREATE USER IF NOT EXISTS $admin_user_sql IDENTIFIED BY $admin_password_sql;
+        ALTER USER $admin_user_sql IDENTIFIED BY $admin_password_sql;
+        REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'xmr';
+        REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'replication_user';
+        REVOKE ALL PRIVILEGES, GRANT OPTION FROM $admin_user_sql;
         GRANT REPLICATION SLAVE ON *.* TO 'replication_user';
-        CREATE USER IF NOT EXISTS $admin_user_sql@'localhost'
-            IDENTIFIED BY $admin_password_sql;
-        ALTER USER $admin_user_sql@'localhost' IDENTIFIED BY $admin_password_sql;
         FLUSH PRIVILEGES;
     "
 }
@@ -444,18 +452,35 @@ initialize_database() {
     provision_database
     (
         cd "$BASE_DIR"
-        XMR_DB_PASSWORD="$DB_PASSWORD" "$BASE_DIR/venv/bin/python" -c \
-            'from db.AppDb import AppDb; from db.SessDb import SessDb; AppDb().initialize_schema(); SessDb().initialize_schema()'
+        "$BASE_DIR/venv/bin/python" -c \
+            'from db.AppDb import _USERS_SCHEMA; from db.SessDb import _SESSION_SCHEMA; print(_USERS_SCHEMA); print(_SESSION_SCHEMA)' |
+            mariadb xmr
     )
     local admin_user_sql
     admin_user_sql=$(sql_string "$ADMIN_DB_USER")
     mariadb -e "
-        GRANT SELECT ON xmr.users TO $admin_user_sql@'localhost';
+        GRANT SELECT (id, username, password_hash, wallet_address, role, status,
+                      created_at, disabled_at),
+              INSERT (username, password_hash, wallet_address, role)
+            ON xmr.users TO 'xmr';
+        GRANT SELECT (id, token_digest, account_id, authenticated, created_at,
+                      last_activity_at, expires_at, absolute_expires_at, revoked_at),
+              INSERT (token_digest, authenticated, created_at, last_activity_at,
+                      expires_at, absolute_expires_at),
+              UPDATE (token_digest, account_id, authenticated, last_activity_at,
+                      expires_at, revoked_at)
+            ON xmr.sessions TO 'xmr';
+        GRANT SELECT (id, username, wallet_address, role, status, created_at,
+                      disabled_at)
+            ON xmr.users TO $admin_user_sql;
         GRANT UPDATE (username, wallet_address, status, disabled_at)
-            ON xmr.users TO $admin_user_sql@'localhost';
-        GRANT SELECT ON xmr.sessions TO $admin_user_sql@'localhost';
-        GRANT UPDATE (revoked_at) ON xmr.sessions TO $admin_user_sql@'localhost';
+            ON xmr.users TO $admin_user_sql;
+        GRANT SELECT (account_id, revoked_at), UPDATE (revoked_at)
+            ON xmr.sessions TO $admin_user_sql;
         FLUSH PRIVILEGES;
+        SHOW GRANTS FOR 'xmr';
+        SHOW GRANTS FOR 'replication_user';
+        SHOW GRANTS FOR $admin_user_sql;
     "
     DB_PASSWORD=""
     ADMIN_DB_PASSWORD=""
