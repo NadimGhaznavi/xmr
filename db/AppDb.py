@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 
 from .DbMgr import DbMgr
 from .XmrDb import XmrDb
@@ -26,6 +26,12 @@ class User:
     status: UserStatus = "active"
     created_at: datetime | None = None
     disabled_at: datetime | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class LoginAccount:
+    user: User
+    password_hash: str
 
 
 class AppDb:
@@ -64,6 +70,48 @@ class AppDb:
         if result.last_insert_id is None:
             raise RuntimeError("MariaDB did not return a user ID")
         return User(result.last_insert_id, username, wallet_address, role)
+
+    def get_user(self, account_id: int) -> User | None:
+        row = self._database.fetch_one(
+            """
+            SELECT id, username, wallet_address, role, status, created_at,
+                   disabled_at
+            FROM users
+            WHERE id = ? AND status = 'active'
+            """,
+            (account_id,),
+        )
+        return None if row is None else _user_from_row(row)
+
+    def find_login_account(self, username: str) -> LoginAccount | None:
+        row = self._database.fetch_one(
+            """
+            SELECT id, username, password_hash, wallet_address, role, status,
+                   created_at, disabled_at
+            FROM users
+            WHERE username = ?
+            """,
+            (username,),
+        )
+        if row is None:
+            return None
+        return LoginAccount(_user_from_row(row), str(row["password_hash"]))
+
+
+def _user_from_row(row: dict[str, Any]) -> User:
+    role = str(row["role"])
+    status = str(row["status"])
+    if role not in {"user", "admin"} or status not in {"active", "disabled"}:
+        raise ValueError("database returned an invalid account")
+    return User(
+        int(row["id"]),
+        str(row["username"]),
+        str(row["wallet_address"]),
+        role,  # type: ignore[arg-type]
+        status,  # type: ignore[arg-type]
+        row["created_at"],
+        row["disabled_at"],
+    )
 
 
 _USERS_SCHEMA = """

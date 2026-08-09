@@ -17,12 +17,18 @@
     {% if pools %}
         <ul>
         {% for pool in pools %}
-            <li>{{ pool.name }}</li>
+            <li>
+                <strong>{{ pool.chain|capitalize }}</strong>
+                — port {{ pool.port }}
+                <a href="/pool?pool_id={{ pool.pool_id }}">Edit</a>
+            </li>
         {% endfor %}
         </ul>
     {% else %}
         <p class="lead">You have not created a pool yet.</p>
     {% endif %}
 
-    <button type="button">New Pool</button>
+    {% if pools|length < 3 %}
+        <p><a href="/pool/new">New Pool</a></p>
+    {% endif %}
 {% endblock %}

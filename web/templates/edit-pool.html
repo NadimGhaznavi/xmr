@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Edit pool · Bear and Moose XMR{% endblock %}
+{% block content %}
+    {% if pool is defined %}
+        <h1>Edit Pool</h1>
+        <p class="lead">Port {{ pool.port }}</p>
+        {% if form_error %}<p class="form-error" role="alert">{{ form_error }}</p>{% endif %}
+        <form method="post" action="/api">
+            <input type="hidden" name="MODULE" value="AppMgr">
+            <input type="hidden" name="METHOD" value="update_pool">
+            <input type="hidden" name="pool_id" value="{{ pool.pool_id }}">
+            <label for="chain">Chain</label>
+            <select id="chain" name="chain" required>
+                {% for option in available_chains %}
+                    <option value="{{ option }}"{% if chain == option %} selected{% endif %}>{{ option|capitalize }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit">Save pool</button>
+        </form>
+        <p class="alternate"><a href="/dashboard">Return to dashboard</a></p>
+    {% else %}
+        <h1>Pool not found</h1>
+        <p>{{ message }}</p>
+        <p class="alternate"><a href="/dashboard">Return to dashboard</a></p>
+    {% endif %}
+{% endblock %}

@@ -5,7 +5,7 @@
 		reverse_proxy 127.0.0.1:8000
 	}
 
-	@account_pages path /login /signup
+	@account_pages path /login /signup /dashboard /pool /pool/new
 	handle @account_pages {
 		reverse_proxy 127.0.0.1:8000
 	}
