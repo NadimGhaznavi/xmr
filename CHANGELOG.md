@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Added a new *Admin* server instance with account management capability.
+
 ## [Release 0.1.0] - 2026-08-09 08:43
 
 

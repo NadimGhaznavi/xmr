@@ -43,7 +43,7 @@ remote() {
 }
 
 version_on() {
-    remote "$1" "cd '$BASE_DIR' && ./venv/bin/python -c 'from constants.DDefaults import DDef; print(DDef.XMR_VERSION)'"
+    remote "$1" "cd '$BASE_DIR' && ./venv/bin/python -c 'from constants.DDefaults import DDefault; print(DDefault.XMR_VERSION)'"
 }
 
 service_on() {

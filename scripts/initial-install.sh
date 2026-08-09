@@ -7,14 +7,21 @@ readonly SERVICE_USER="xmr"
 readonly SERVICE_GROUP="xmr"
 readonly SERVICE_NAME="xmr.service"
 readonly SERVICE_FILE="/etc/systemd/system/xmr.service"
+readonly ADMIN_SERVICE_USER="xmr-admin"
+readonly ADMIN_SERVICE_GROUP="xmr-admin"
+readonly ADMIN_SERVICE_NAME="xmr-admin.service"
+readonly ADMIN_SERVICE_FILE="/etc/systemd/system/xmr-admin.service"
 readonly CADDY_CONFIG_DIR="/etc/caddy"
 readonly CADDY_FILE="$CADDY_CONFIG_DIR/Caddyfile"
 readonly CADDY_BACKUP="$BASE_DIR/etc/Caddyfile.before-xmr"
 readonly CADDY_ACTIVE_MARKER="$BASE_DIR/etc/caddy-was-active"
 readonly ENV_FILE="$BASE_DIR/etc/xmr.env"
+readonly ADMIN_ENV_FILE="$BASE_DIR/etc/xmr-admin.env"
 readonly REPLICATION_CREDENTIAL_FILE="/root/.xmr"
 readonly REPLICATION_USER="replication_user"
 DB_PASSWORD=""
+ADMIN_DB_USER="xmradmin"
+ADMIN_DB_PASSWORD=""
 REPLICATION_PASSWORD=""
 CLUSTER_ROLE=""
 
@@ -40,6 +47,17 @@ ensure_service_account() {
             --home-dir /nonexistent \
             --shell /usr/sbin/nologin \
             "$SERVICE_USER"
+    fi
+
+    if ! getent group "$ADMIN_SERVICE_GROUP" >/dev/null 2>&1; then
+        groupadd --system "$ADMIN_SERVICE_GROUP"
+    fi
+    if ! id "$ADMIN_SERVICE_USER" >/dev/null 2>&1; then
+        useradd --system \
+            --gid "$ADMIN_SERVICE_GROUP" \
+            --home-dir /nonexistent \
+            --shell /usr/sbin/nologin \
+            "$ADMIN_SERVICE_USER"
     fi
 }
 
@@ -158,6 +176,26 @@ prompt_replication_password() {
     done
 }
 
+prompt_admin_password() {
+    local confirmation=""
+
+    set +x
+    while true; do
+        printf 'MariaDB password for admin service user %s: ' "$ADMIN_DB_USER" >&2
+        IFS= read -r -s ADMIN_DB_PASSWORD || exit 1
+        printf '\n' >&2
+        if [[ -z "$ADMIN_DB_PASSWORD" ]]; then
+            echo "ERROR: The admin database password cannot be empty." >&2
+            continue
+        fi
+        printf 'Confirm admin MariaDB password: ' >&2
+        IFS= read -r -s confirmation || exit 1
+        printf '\n' >&2
+        [[ "$ADMIN_DB_PASSWORD" == "$confirmation" ]] && return
+        echo "ERROR: Passwords do not match; please try again." >&2
+    done
+}
+
 prompt_cluster_role() {
     while true; do
         read -r -p "Cluster role for this node (hot/cold): " CLUSTER_ROLE
@@ -175,7 +213,7 @@ load_existing_credentials() {
         return 1
     }
 
-    local answer line key value db_user="" replication_user=""
+    local answer line key value db_user="" replication_user="" admin_user=""
     read -r -p "Use credentials from $REPLICATION_CREDENTIAL_FILE? (y/N): " answer
     [[ "$answer" =~ ^[Yy]$ ]] || return 1
 
@@ -192,6 +230,8 @@ load_existing_credentials() {
             XMR_DB_PASSWORD) DB_PASSWORD="$value" ;;
             XMR_REPLICATION_USER) replication_user="$value" ;;
             XMR_REPLICATION_PASSWORD) REPLICATION_PASSWORD="$value" ;;
+            XMR_ADMIN_USER) admin_user="$value" ;;
+            XMR_ADMIN_PASSWORD) ADMIN_DB_PASSWORD="$value" ;;
             *)
                 echo "ERROR: Unknown setting in $REPLICATION_CREDENTIAL_FILE: $key" >&2
                 return 1
@@ -212,6 +252,15 @@ load_existing_credentials() {
         return 1
     }
     [[ -n "$DB_PASSWORD" ]] || DB_PASSWORD="$REPLICATION_PASSWORD"
+    [[ "$admin_user" =~ ^[A-Za-z0-9_]+$ ]] || {
+        echo "ERROR: Invalid or missing XMR_ADMIN_USER." >&2
+        return 1
+    }
+    [[ -n "$ADMIN_DB_PASSWORD" ]] || {
+        echo "ERROR: XMR_ADMIN_PASSWORD is missing." >&2
+        return 1
+    }
+    ADMIN_DB_USER="$admin_user"
     echo "Using credentials from $REPLICATION_CREDENTIAL_FILE."
 }
 
@@ -219,6 +268,8 @@ create_directories() {
     install -d -o root -g root -m 0755 \
         "$BASE_DIR" \
         "$BASE_DIR/constants" \
+        "$BASE_DIR/admin" \
+        "$BASE_DIR/admin/templates" \
         "$BASE_DIR/db" \
         "$BASE_DIR/mgr" \
         "$BASE_DIR/web" \
@@ -227,7 +278,7 @@ create_directories() {
         "$BASE_DIR/web/templates" \
         "$BASE_DIR/venv"
 
-    install -d -o root -g "$SERVICE_GROUP" -m 0750 \
+    install -d -o root -g root -m 0751 \
         "$BASE_DIR/etc"
 
     install -d -o "$SERVICE_USER" -g "$SERVICE_GROUP" -m 0750 \
@@ -241,11 +292,13 @@ install_application() {
         "$BASE_DIR/requirements.txt"
 
     install -o root -g root -m 0644 \
+        "$REPO_DIR/constants/__init__.py" \
         "$REPO_DIR/constants/DDefaults.py" \
-        "$BASE_DIR/constants/DDefaults.py"
+        "$BASE_DIR/constants/"
 
     install -o root -g root -m 0644 \
         "$REPO_DIR/db/__init__.py" \
+        "$REPO_DIR/db/AdminDb.py" \
         "$REPO_DIR/db/AppDb.py" \
         "$REPO_DIR/db/DbMgr.py" \
         "$REPO_DIR/db/SessDb.py" \
@@ -254,6 +307,7 @@ install_application() {
 
     install -o root -g root -m 0644 \
         "$REPO_DIR/mgr/__init__.py" \
+        "$REPO_DIR/mgr/AdminMgr.py" \
         "$REPO_DIR/mgr/AppMgr.py" \
         "$REPO_DIR/mgr/AcctMgr.py" \
         "$REPO_DIR/mgr/SessMgr.py" \
@@ -262,9 +316,22 @@ install_application() {
     install -o root -g root -m 0644 \
         "$REPO_DIR/web/__init__.py" \
         "$REPO_DIR/web/Interface.py" \
+        "$REPO_DIR/web/Server.py" \
         "$REPO_DIR/web/server.py" \
         "$REPO_DIR/web/session_middleware.py" \
         "$BASE_DIR/web/"
+
+    install -o root -g root -m 0644 \
+        "$REPO_DIR/admin/__init__.py" \
+        "$REPO_DIR/admin/server.py" \
+        "$BASE_DIR/admin/"
+
+    install -o root -g root -m 0644 \
+        "$REPO_DIR/admin/templates/base.html" \
+        "$REPO_DIR/admin/templates/accounts.html" \
+        "$REPO_DIR/admin/templates/edit-account.html" \
+        "$REPO_DIR/admin/templates/cold.html" \
+        "$BASE_DIR/admin/templates/"
 
     install -o root -g root -m 0644 \
         "$REPO_DIR/web/templates/base.html" \
@@ -284,6 +351,7 @@ install_application() {
 
 create_environment_file() {
     local escaped_password="$DB_PASSWORD"
+    local escaped_admin_password="$ADMIN_DB_PASSWORD"
     escaped_password=${escaped_password//\\/\\\\}
     escaped_password=${escaped_password//\"/\\\"}
 
@@ -298,6 +366,19 @@ create_environment_file() {
     printf 'XMR_DB_PASSWORD="%s"\n' "$escaped_password" >>"$ENV_FILE"
 
     escaped_password=""
+
+    escaped_admin_password=${escaped_admin_password//\\/\\\\}
+    escaped_admin_password=${escaped_admin_password//\"/\\\"}
+    install -o root -g "$ADMIN_SERVICE_GROUP" -m 0640 /dev/null "$ADMIN_ENV_FILE"
+    printf '%s\n' \
+        'XMR_ADMIN_DB_HOST=localhost' \
+        'XMR_ADMIN_DB_PORT=3306' \
+        'XMR_ADMIN_DB_NAME=xmr' \
+        "XMR_ADMIN_DB_USER=$ADMIN_DB_USER" \
+        'XMR_TRUSTED_LAN=192.168.0.0/24' >"$ADMIN_ENV_FILE"
+    printf 'XMR_ADMIN_DB_PASSWORD="%s"\n' "$escaped_admin_password" \
+        >>"$ADMIN_ENV_FILE"
+    escaped_admin_password=""
 }
 
 create_replication_credential_file() {
@@ -309,6 +390,10 @@ create_replication_credential_file() {
     printf 'XMR_REPLICATION_USER=%s\n' "$REPLICATION_USER" \
         >>"$REPLICATION_CREDENTIAL_FILE"
     printf 'XMR_REPLICATION_PASSWORD=%s\n' "$REPLICATION_PASSWORD" \
+        >>"$REPLICATION_CREDENTIAL_FILE"
+    printf 'XMR_ADMIN_USER=%s\n' "$ADMIN_DB_USER" \
+        >>"$REPLICATION_CREDENTIAL_FILE"
+    printf 'XMR_ADMIN_PASSWORD=%s\n' "$ADMIN_DB_PASSWORD" \
         >>"$REPLICATION_CREDENTIAL_FILE"
 }
 
@@ -331,9 +416,11 @@ sql_string() {
 }
 
 provision_database() {
-    local db_password_sql replication_password_sql
+    local db_password_sql replication_password_sql admin_user_sql admin_password_sql
     db_password_sql=$(sql_string "$DB_PASSWORD")
     replication_password_sql=$(sql_string "$REPLICATION_PASSWORD")
+    admin_user_sql=$(sql_string "$ADMIN_DB_USER")
+    admin_password_sql=$(sql_string "$ADMIN_DB_PASSWORD")
 
     mariadb -e "
         CREATE DATABASE IF NOT EXISTS xmr
@@ -345,6 +432,9 @@ provision_database() {
             IDENTIFIED BY $replication_password_sql;
         ALTER USER 'replication_user' IDENTIFIED BY $replication_password_sql;
         GRANT REPLICATION SLAVE ON *.* TO 'replication_user';
+        CREATE USER IF NOT EXISTS $admin_user_sql@'localhost'
+            IDENTIFIED BY $admin_password_sql;
+        ALTER USER $admin_user_sql@'localhost' IDENTIFIED BY $admin_password_sql;
         FLUSH PRIVILEGES;
     "
 }
@@ -357,7 +447,18 @@ initialize_database() {
         XMR_DB_PASSWORD="$DB_PASSWORD" "$BASE_DIR/venv/bin/python" -c \
             'from db.AppDb import AppDb; from db.SessDb import SessDb; AppDb().initialize_schema(); SessDb().initialize_schema()'
     )
+    local admin_user_sql
+    admin_user_sql=$(sql_string "$ADMIN_DB_USER")
+    mariadb -e "
+        GRANT SELECT ON xmr.users TO $admin_user_sql@'localhost';
+        GRANT UPDATE (username, wallet_address, status, disabled_at)
+            ON xmr.users TO $admin_user_sql@'localhost';
+        GRANT SELECT ON xmr.sessions TO $admin_user_sql@'localhost';
+        GRANT UPDATE (revoked_at) ON xmr.sessions TO $admin_user_sql@'localhost';
+        FLUSH PRIVILEGES;
+    "
     DB_PASSWORD=""
+    ADMIN_DB_PASSWORD=""
     REPLICATION_PASSWORD=""
 }
 
@@ -389,8 +490,19 @@ install_systemd_service() {
     install -o root -g root -m 0644 \
         "$REPO_DIR/systemd/xmr.service" \
         "$SERVICE_FILE"
+    install -o root -g root -m 0644 \
+        "$REPO_DIR/systemd/xmr-admin.service" \
+        "$ADMIN_SERVICE_FILE"
 
     systemctl daemon-reload
+}
+
+start_admin_service() {
+    systemctl enable --now "$ADMIN_SERVICE_NAME"
+    systemctl is-active --quiet "$ADMIN_SERVICE_NAME" || {
+        echo "ERROR: $ADMIN_SERVICE_NAME failed to start." >&2
+        exit 1
+    }
 }
 
 install_caddy_config() {
@@ -423,6 +535,7 @@ main() {
     if ! load_existing_credentials; then
         prompt_db_password
         prompt_replication_password
+        prompt_admin_password
     fi
 
     step "Creating installation directories"
@@ -448,6 +561,9 @@ main() {
 
     step "Configuring $CLUSTER_ROLE cluster role"
     configure_cluster_role
+
+    step "Starting LAN admin service"
+    start_admin_service
 
     step "Installing Caddy configuration"
     install_caddy_config

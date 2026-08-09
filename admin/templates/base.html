@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}XMR Administration{% endblock %}</title>
+    <style>
+        :root { color-scheme: dark; font-family: system-ui, sans-serif; background: #101418; color: #f7f7f5; }
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 2rem; }
+        main { width: min(72rem, 100%); margin: auto; }
+        a { color: #ff9a55; }
+        table { width: 100%; border-collapse: collapse; background: #181d22; }
+        th, td { padding: 0.8rem; border-bottom: 1px solid #343a40; text-align: left; }
+        th { color: #b8c0c7; }
+        label { display: block; margin-top: 1rem; font-weight: 700; }
+        input { width: 100%; margin-top: 0.4rem; padding: 0.7rem; background: #101418; color: inherit; border: 1px solid #59616a; border-radius: 0.4rem; }
+        button { margin-top: 1rem; padding: 0.7rem 1rem; border: 0; border-radius: 0.4rem; background: #ff6600; color: #17110d; font-weight: 800; cursor: pointer; }
+        .danger { background: #c53b32; color: white; }
+        .panel { max-width: 48rem; padding: 1.5rem; background: #181d22; border-radius: 0.7rem; }
+        .error { color: #ff9b7a; }
+        .status { text-transform: capitalize; }
+        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 2rem; }
+    </style>
+</head>
+<body>
+    <main>{% block content %}{% endblock %}</main>
+</body>
+</html>

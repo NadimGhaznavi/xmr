@@ -4,6 +4,8 @@ set -euo pipefail
 readonly BASE_DIR="/opt/xmr"
 readonly SERVICE_NAME="xmr.service"
 readonly SERVICE_FILE="/etc/systemd/system/$SERVICE_NAME"
+readonly ADMIN_SERVICE_NAME="xmr-admin.service"
+readonly ADMIN_SERVICE_FILE="/etc/systemd/system/$ADMIN_SERVICE_NAME"
 readonly CADDY_FILE="/etc/caddy/Caddyfile"
 readonly CADDY_BACKUP="$BASE_DIR/etc/Caddyfile.before-xmr"
 readonly CADDY_ACTIVE_MARKER="$BASE_DIR/etc/caddy-was-active"
@@ -23,10 +25,13 @@ remove_systemd_service() {
     # Stop the service before removing the files it may be using. Disabling it
     # also removes any symlinks created after the initial installation.
     systemctl disable --now "$SERVICE_NAME" 2>/dev/null || true
+    systemctl disable --now "$ADMIN_SERVICE_NAME" 2>/dev/null || true
 
     rm -f -- "$SERVICE_FILE"
+    rm -f -- "$ADMIN_SERVICE_FILE"
     systemctl daemon-reload
     systemctl reset-failed "$SERVICE_NAME" 2>/dev/null || true
+    systemctl reset-failed "$ADMIN_SERVICE_NAME" 2>/dev/null || true
 }
 
 reset_database() {
