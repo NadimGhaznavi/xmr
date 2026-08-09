@@ -154,7 +154,11 @@ async def _finish_authentication(scope: dict[str, Any], result: Result) -> Resul
 
     from web.UserSession import UserSession
 
-    cookie = await asyncio.to_thread(UserSession().authenticate, result.account_id)
+    cookie = await asyncio.to_thread(
+        UserSession().authenticate,
+        result.account_id,
+        secure=scope.get("scheme") == "https",
+    )
     scope["xmr.response_cookie"] = cookie
     return ViewResult(result.context, result.status)
 
