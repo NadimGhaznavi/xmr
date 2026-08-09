@@ -310,7 +310,6 @@ create_replication_credential_file() {
         >>"$REPLICATION_CREDENTIAL_FILE"
     printf 'XMR_REPLICATION_PASSWORD=%s\n' "$REPLICATION_PASSWORD" \
         >>"$REPLICATION_CREDENTIAL_FILE"
-    REPLICATION_PASSWORD=""
 }
 
 create_virtualenv() {
@@ -342,10 +341,10 @@ provision_database() {
         CREATE USER IF NOT EXISTS 'xmr'@'localhost' IDENTIFIED BY $db_password_sql;
         ALTER USER 'xmr'@'localhost' IDENTIFIED BY $db_password_sql;
         GRANT ALL PRIVILEGES ON xmr.* TO 'xmr'@'localhost';
-        CREATE USER IF NOT EXISTS 'replication_user'@'%'
+        CREATE USER IF NOT EXISTS 'replication_user'
             IDENTIFIED BY $replication_password_sql;
-        ALTER USER 'replication_user'@'%' IDENTIFIED BY $replication_password_sql;
-        GRANT REPLICATION SLAVE ON *.* TO 'replication_user'@'%';
+        ALTER USER 'replication_user' IDENTIFIED BY $replication_password_sql;
+        GRANT REPLICATION SLAVE ON *.* TO 'replication_user';
         FLUSH PRIVILEGES;
     "
 }
@@ -359,6 +358,7 @@ initialize_database() {
             'from db.AppDb import AppDb; from db.SessDb import SessDb; AppDb().initialize_schema(); SessDb().initialize_schema()'
     )
     DB_PASSWORD=""
+    REPLICATION_PASSWORD=""
 }
 
 configure_cluster_role() {
