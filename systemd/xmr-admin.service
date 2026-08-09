@@ -1,0 +1,30 @@
+[Unit]
+Description=Bear and Moose XMR Admin Server
+After=network-online.target mariadb.service
+Wants=network-online.target
+Requires=mariadb.service
+
+[Service]
+Type=simple
+User=xmr-admin
+Group=xmr-admin
+
+WorkingDirectory=/opt/xmr
+EnvironmentFile=/opt/xmr/etc/xmr-admin.env
+
+ExecStart=/opt/xmr/venv/bin/uvicorn admin.server:app \
+    --host 0.0.0.0 \
+    --port 8001 \
+    --no-server-header
+
+Restart=on-failure
+RestartSec=5
+
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+
+[Install]
+WantedBy=multi-user.target

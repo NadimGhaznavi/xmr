@@ -1,0 +1,1 @@
+"""LAN-only administrative application."""

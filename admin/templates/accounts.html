@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Accounts · XMR Administration{% endblock %}
+{% block content %}
+    <h1>Accounts</h1>
+    <p>Account administration on {{ accounts|length }} registered account{% if accounts|length != 1 %}s{% endif %}.</p>
+    <table>
+        <thead>
+            <tr><th>ID</th><th>Username</th><th>Wallet</th><th>Status</th><th>Created</th><th></th></tr>
+        </thead>
+        <tbody>
+        {% for account in accounts %}
+            <tr>
+                <td>{{ account.user_id }}</td>
+                <td>{{ account.username }}</td>
+                <td><code>{{ account.wallet_address }}</code></td>
+                <td class="status">{{ account.status }}</td>
+                <td>{{ account.created_at }}</td>
+                <td><a href="/account?account_id={{ account.user_id }}">Edit</a></td>
+            </tr>
+        {% else %}
+            <tr><td colspan="6">No accounts have been created.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

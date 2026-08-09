@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Edit account · XMR Administration{% endblock %}
+{% block content %}
+    {% if account is defined %}
+        <p><a href="/">← Accounts</a></p>
+        <h1>Edit account {{ account.user_id }}</h1>
+        {% if form_error %}<p class="error" role="alert">{{ form_error }}</p>{% endif %}
+        <div class="panel">
+            <form method="post" action="/api">
+                <input type="hidden" name="MODULE" value="AdminMgr">
+                <input type="hidden" name="METHOD" value="update_account">
+                <input type="hidden" name="account_id" value="{{ account.user_id }}">
+                <label for="username">Username</label>
+                <input id="username" name="username" value="{{ username }}" required>
+                {% if errors.get("username") %}<p class="error">{{ errors["username"] }}</p>{% endif %}
+                <label for="wallet">Wallet address</label>
+                <input id="wallet" name="wallet" value="{{ wallet }}" required>
+                {% if errors.get("wallet") %}<p class="error">{{ errors["wallet"] }}</p>{% endif %}
+                <button type="submit">Save account</button>
+            </form>
+        </div>
+        <div class="actions">
+            <section class="panel">
+                <h2>{% if account.status == "active" %}Disable{% else %}Enable{% endif %} account</h2>
+                <p>No account data will be deleted. Existing sessions are revoked when an account is disabled.</p>
+                <form method="post" action="/api">
+                    <input type="hidden" name="MODULE" value="AdminMgr">
+                    <input type="hidden" name="METHOD" value="{% if account.status == 'active' %}disable_account{% else %}enable_account{% endif %}">
+                    <input type="hidden" name="account_id" value="{{ account.user_id }}">
+                    <label for="confirm_username">Enter <strong>{{ account.username }}</strong> to confirm</label>
+                    <input id="confirm_username" name="confirm_username" autocomplete="off" required>
+                    <button class="{% if account.status == 'active' %}danger{% endif %}" type="submit">
+                        {% if account.status == "active" %}Disable{% else %}Enable{% endif %} account
+                    </button>
+                </form>
+            </section>
+        </div>
+    {% else %}
+        <h1>Account not found</h1>
+        <p>{{ message }}</p>
+        <p><a href="/">Return to accounts</a></p>
+    {% endif %}
+{% endblock %}

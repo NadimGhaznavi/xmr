@@ -57,18 +57,20 @@ TEMPLATES = Environment(
 )
 
 
-def compile_route(route: Route) -> Handler:
+def compile_route(route: Route, templates: Environment = TEMPLATES) -> Handler:
     operation = _resolve(route.target)
 
     async def handle(scope: dict[str, Any], receive: Receive, send: Send) -> None:
         arguments = await _read_arguments(scope, receive)
         result = await _run(route, operation, arguments)
-        await _respond(scope, send, route, result)
+        await _respond(scope, send, route, result, templates)
 
     return handle
 
 
-def compile_dispatch(routes: Mapping[str, Route]) -> Handler:
+def compile_dispatch(
+    routes: Mapping[str, Route], templates: Environment = TEMPLATES
+) -> Handler:
     operations = {target: _resolve(route.target) for target, route in routes.items()}
 
     async def dispatch(scope: dict[str, Any], receive: Receive, send: Send) -> None:
@@ -85,7 +87,7 @@ def compile_dispatch(routes: Mapping[str, Route]) -> Handler:
             return
 
         result = await _run(route, operations[target], arguments)
-        await _respond(scope, send, route, result)
+        await _respond(scope, send, route, result, templates)
 
     return dispatch
 
@@ -105,11 +107,15 @@ async def _run(route: Route, operation: Operation, arguments: Arguments) -> Resu
 
 
 async def _read_arguments(scope: dict[str, Any], receive: Receive) -> dict[str, str]:
+    query = scope.get("query_string", b"")
+    values = parse_qs(query.decode("utf-8"), keep_blank_values=True, max_num_fields=32)
+    arguments = {name: entries[0] for name, entries in values.items()}
     if str(scope["method"]).upper() not in {"POST", "PUT", "PATCH"}:
-        return {}
+        return arguments
     body = await _read_body(receive)
     values = parse_qs(body.decode("utf-8"), keep_blank_values=True, max_num_fields=32)
-    return {name: entries[0] for name, entries in values.items()}
+    arguments.update({name: entries[0] for name, entries in values.items()})
+    return arguments
 
 
 async def _read_body(receive: Receive, *, limit: int = 16_384) -> bytes:
@@ -126,7 +132,11 @@ async def _read_body(receive: Receive, *, limit: int = 16_384) -> bytes:
 
 
 async def _respond(
-    scope: dict[str, Any], send: Send, route: Route, result: Result
+    scope: dict[str, Any],
+    send: Send,
+    route: Route,
+    result: Result,
+    templates: Environment,
 ) -> None:
     include_body = str(scope["method"]).upper() != "HEAD"
     if isinstance(result, RedirectResult):
@@ -141,7 +151,7 @@ async def _respond(
             if result.status >= 400 and route.error_template is not None
             else route.template
         )
-        content = TEMPLATES.get_template(template).render(**result.context)
+        content = templates.get_template(template).render(**result.context)
         await _send_html(send, result.status, content, include_body=include_body)
 
 

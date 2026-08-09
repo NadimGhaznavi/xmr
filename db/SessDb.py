@@ -24,11 +24,14 @@ class SessDb:
     def find_active(self, token_digest: bytes, now: datetime) -> dict[str, Any] | None:
         return self._database.fetch_one(
             """
-            SELECT id, account_id, authenticated, created_at, last_activity_at,
-                   expires_at, absolute_expires_at
+            SELECT sessions.id, sessions.account_id, sessions.authenticated,
+                   sessions.created_at, sessions.last_activity_at,
+                   sessions.expires_at, sessions.absolute_expires_at
             FROM sessions
+            LEFT JOIN users ON users.id = sessions.account_id
             WHERE token_digest = ? AND revoked_at IS NULL
               AND expires_at > ? AND absolute_expires_at > ?
+              AND (authenticated = FALSE OR users.status = 'active')
             """,
             (token_digest, now, now),
         )
