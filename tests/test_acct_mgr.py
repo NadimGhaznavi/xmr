@@ -16,6 +16,9 @@ class FakeHasher:
     def hash(self, password):
         return f"hashed:{password}"
 
+    def verify(self, password_hash, password):
+        return password_hash == f"hashed:{password}"
+
 
 class FakeDatabase:
     def __init__(self, *, duplicate=False):
@@ -27,6 +30,9 @@ class FakeDatabase:
         if self.duplicate:
             raise DuplicateUserError("duplicate")
         return User(7, username, wallet_address, role)
+
+    def find_login_account(self, username):
+        return None
 
 
 class AcctMgrTest(unittest.TestCase):

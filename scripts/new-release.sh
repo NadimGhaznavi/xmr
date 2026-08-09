@@ -11,7 +11,7 @@ set -euo pipefail
 readonly PROJECT_NAME="XMR Pool"
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-readonly DDEF_FILE="$PROJECT_DIR/constants/DDefaults.py"
+readonly DDEF_FILE="$PROJECT_DIR/constants/DDefault.py"
 
 cd "$PROJECT_DIR"
 
@@ -343,7 +343,7 @@ echo "=== Version Verification ==="
 
 # Check the XMR_VERSION constant
 if [ -f "$DDEF_FILE" ]; then
-    echo "🐍 constants/DDefaults.py:"
+    echo "🐍 constants/DDefault.py:"
     grep "XMR_VERSION" "$DDEF_FILE" | head -1
 fi
 

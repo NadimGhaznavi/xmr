@@ -15,7 +15,7 @@ from typing import Any
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, select_autoescape
 
-from constants.DDefaults import DDefault
+from constants.DDefault import DDefault
 from db.AdminDb import AdminDb
 from web.Interface import Route, Send
 from web.Server import Server

@@ -2,6 +2,7 @@
 set -euo pipefail
 
 readonly BASE_DIR="/opt/xmr"
+readonly OPS_DIR="/opt/xmr_ops"
 readonly REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly SERVICE_USER="xmr"
 readonly SERVICE_GROUP="xmr"
@@ -66,6 +67,10 @@ ensure_service_account() {
 verify_install_target() {
     if [[ -e "$BASE_DIR" ]]; then
         echo "ERROR: Install directory '$BASE_DIR' already exists." >&2
+        exit 1
+    fi
+    if [[ -e "$OPS_DIR" ]]; then
+        echo "ERROR: Operations directory '$OPS_DIR' already exists." >&2
         exit 1
     fi
 }
@@ -311,6 +316,8 @@ load_existing_credentials() {
 }
 
 create_directories() {
+    install -d -o root -g root -m 0755 "$OPS_DIR"
+
     install -d -o root -g root -m 0755 \
         "$BASE_DIR" \
         "$BASE_DIR/constants" \
@@ -339,7 +346,7 @@ install_application() {
 
     install -o root -g root -m 0644 \
         "$REPO_DIR/constants/__init__.py" \
-        "$REPO_DIR/constants/DDefaults.py" \
+        "$REPO_DIR/constants/DDefault.py" \
         "$BASE_DIR/constants/"
 
     install -o root -g root -m 0644 \
@@ -398,6 +405,13 @@ install_application() {
     install -o root -g root -m 0644 \
         "$REPO_DIR/web/static/img/logo.png" \
         "$BASE_DIR/web/static/img/logo.png"
+}
+
+install_operational_scripts() {
+    install -o root -g root -m 0755 \
+        "$REPO_DIR/scripts/cluster-mgr.sh" \
+        "$REPO_DIR/scripts/db-mgr.sh" \
+        "$OPS_DIR/"
 }
 
 create_environment_file() {
@@ -580,7 +594,7 @@ configure_cluster_role() {
 
     local node
     node=$(hostname -s)
-    printf 'demote %s\n' "$node" | "$REPO_DIR/scripts/cluster-mgr.sh" demote
+    printf 'demote %s\n' "$node" | "$OPS_DIR/cluster-mgr.sh" demote
 }
 
 install_systemd_service() {
@@ -645,6 +659,9 @@ main() {
 
     step "Installing application"
     install_application
+
+    step "Installing root-owned operational scripts"
+    install_operational_scripts
 
     step "Creating private environment file"
     create_environment_file

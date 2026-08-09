@@ -2,6 +2,7 @@
 set -euo pipefail
 
 readonly BASE_DIR="/opt/xmr"
+readonly OPS_DIR="/opt/xmr_ops"
 readonly SERVICE_NAME="xmr.service"
 readonly SERVICE_FILE="/etc/systemd/system/$SERVICE_NAME"
 readonly ADMIN_SERVICE_NAME="xmr-admin.service"
@@ -92,8 +93,9 @@ main() {
     step "Restoring Caddy configuration"
     restore_caddy_config
 
-    step "Removing installation directory ($BASE_DIR)"
+    step "Removing installation directories ($BASE_DIR and $OPS_DIR)"
     remove_installation
+    rm -rf -- "$OPS_DIR"
 
     echo
     echo "Bear and Moose XMR installation removed successfully!"
