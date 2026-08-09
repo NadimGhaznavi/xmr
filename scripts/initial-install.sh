@@ -453,7 +453,7 @@ initialize_database() {
     (
         cd "$BASE_DIR"
         "$BASE_DIR/venv/bin/python" -c \
-            'from db.AppDb import _USERS_SCHEMA; from db.SessDb import _SESSION_SCHEMA; print(_USERS_SCHEMA); print(_SESSION_SCHEMA)' |
+            'from db.AppDb import _USERS_SCHEMA; from db.SessDb import _SESSION_SCHEMA; print(_USERS_SCHEMA, ";", _SESSION_SCHEMA, ";")' |
             mariadb xmr
     )
     local admin_user_sql
