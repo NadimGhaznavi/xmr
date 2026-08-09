@@ -46,6 +46,7 @@ Handler = Callable[[dict[str, Any], Receive, Send], Awaitable[None]]
 class Route:
     target: str
     template: str | None = None
+    error_template: str | None = None
     blocking: bool = False
 
 
@@ -135,7 +136,12 @@ async def _respond(
     elif route.template is None:
         raise RuntimeError(f"route {route.target} has no template")
     else:
-        content = TEMPLATES.get_template(route.template).render(**result.context)
+        template = (
+            route.error_template
+            if result.status >= 400 and route.error_template is not None
+            else route.template
+        )
+        content = TEMPLATES.get_template(template).render(**result.context)
         await _send_html(send, result.status, content, include_body=include_body)
 
 

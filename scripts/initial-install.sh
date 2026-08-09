@@ -264,6 +264,7 @@ install_application() {
 
     install -o root -g root -m 0644 \
         "$REPO_DIR/web/templates/base.html" \
+        "$REPO_DIR/web/templates/dashboard.html" \
         "$REPO_DIR/web/templates/login.html" \
         "$REPO_DIR/web/templates/signup.html" \
         "$BASE_DIR/web/templates/"

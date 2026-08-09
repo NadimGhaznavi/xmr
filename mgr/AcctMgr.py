@@ -7,11 +7,10 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from db.AppDb import (
-    AccountRole,
     AppDb,
-    CreatedAccount,
-    CreatedMinerAccount,
-    DuplicateAccountError,
+    DuplicateUserError,
+    User,
+    UserRole,
 )
 
 USERNAME_PATTERN = re.compile(
@@ -24,13 +23,14 @@ MONERO_ADDRESS_PATTERN = re.compile(
 
 
 class AccountStore(Protocol):
-    def create_account(
-        self, username: str, password_hash: str, *, role: AccountRole = "user"
-    ) -> CreatedAccount: ...
-
-    def create_miner_account(
-        self, username: str, password_hash: str, wallet_address: str
-    ) -> CreatedMinerAccount: ...
+    def create_user(
+        self,
+        username: str,
+        password_hash: str,
+        wallet_address: str,
+        *,
+        role: UserRole = "user",
+    ) -> User: ...
 
 
 class Hasher(Protocol):
@@ -61,15 +61,7 @@ class AcctMgr:
         self._database = database or AppDb()
         self._password_hasher = password_hasher or _default_password_hasher()
 
-    def create_account(
-        self, username: str, password_hash: str, *, role: AccountRole = "user"
-    ) -> CreatedAccount:
-        self._validate_account(username, password_hash, role)
-        return self._database.create_account(username, password_hash, role=role)
-
-    def create_miner_account(
-        self, username: str, password: str, wallet_address: str
-    ) -> CreatedMinerAccount:
+    def create_user(self, username: str, password: str, wallet_address: str) -> User:
         username = username.strip()
         wallet_address = wallet_address.strip()
         errors = self._validate_signup(username, password, wallet_address)
@@ -78,22 +70,11 @@ class AcctMgr:
 
         password_hash = self._password_hasher.hash(password)
         try:
-            return self._database.create_miner_account(
-                username, password_hash, wallet_address
-            )
-        except DuplicateAccountError as error:
+            return self._database.create_user(username, password_hash, wallet_address)
+        except DuplicateUserError as error:
             raise AccountAlreadyExistsError(
                 "the username or wallet is already registered"
             ) from error
-
-    @staticmethod
-    def _validate_account(username: str, password_hash: str, role: AccountRole) -> None:
-        if not username or len(username) > 64:
-            raise ValueError("username must contain 1 to 64 characters")
-        if not password_hash or len(password_hash) > 255:
-            raise ValueError("password hash must contain 1 to 255 characters")
-        if role not in {"user", "admin"}:
-            raise ValueError("role must be 'user' or 'admin'")
 
     @staticmethod
     def _validate_signup(
