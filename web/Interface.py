@@ -26,6 +26,13 @@ class ViewResult:
 
 
 @dataclass(frozen=True, slots=True)
+class AuthenticatedViewResult:
+    account_id: int
+    context: Mapping[str, Any] = field(default_factory=dict)
+    status: int = 200
+
+
+@dataclass(frozen=True, slots=True)
 class RedirectResult:
     location: str
     status: int = 303
@@ -44,7 +51,9 @@ class BinaryResult:
     status: int = 200
 
 
-Result = ViewResult | RedirectResult | JsonResult | BinaryResult
+Result = (
+    ViewResult | AuthenticatedViewResult | RedirectResult | JsonResult | BinaryResult
+)
 Operation = Callable[[Arguments], Result]
 Handler = Callable[[dict[str, Any], Receive, Send], Awaitable[None]]
 
@@ -55,6 +64,7 @@ class Route:
     template: str | None = None
     error_template: str | None = None
     blocking: bool = False
+    authenticated: bool = False
 
 
 TEMPLATES = Environment(
@@ -69,7 +79,13 @@ def compile_route(route: Route, templates: Environment = TEMPLATES) -> Handler:
 
     async def handle(scope: dict[str, Any], receive: Receive, send: Send) -> None:
         arguments = await _read_arguments(scope, receive)
+        if route.authenticated and not await _add_authenticated_account(
+            scope, arguments
+        ):
+            await _respond(scope, send, route, RedirectResult("/login"), templates)
+            return
         result = await _run(route, operation, arguments)
+        result = await _finish_authentication(scope, result)
         await _respond(scope, send, route, result, templates)
 
     return handle
@@ -93,7 +109,14 @@ def compile_dispatch(
             await _send_json(send, 404, {"error": "unknown_operation"})
             return
 
+        if route.authenticated and not await _add_authenticated_account(
+            scope, arguments
+        ):
+            await _respond(scope, send, route, RedirectResult("/login"), templates)
+            return
+
         result = await _run(route, operations[target], arguments)
+        result = await _finish_authentication(scope, result)
         await _respond(scope, send, route, result, templates)
 
     return dispatch
@@ -111,6 +134,29 @@ async def _run(route: Route, operation: Operation, arguments: Arguments) -> Resu
     if route.blocking:
         return await asyncio.to_thread(operation, arguments)
     return operation(arguments)
+
+
+async def _add_authenticated_account(
+    scope: dict[str, Any], arguments: dict[str, str]
+) -> bool:
+    from web.UserSession import UserSession
+
+    account_id = await asyncio.to_thread(UserSession().resolve, scope)
+    if account_id is None:
+        return False
+    arguments["_account_id"] = str(account_id)
+    return True
+
+
+async def _finish_authentication(scope: dict[str, Any], result: Result) -> Result:
+    if not isinstance(result, AuthenticatedViewResult):
+        return result
+
+    from web.UserSession import UserSession
+
+    cookie = await asyncio.to_thread(UserSession().authenticate, result.account_id)
+    scope["xmr.response_cookie"] = cookie
+    return ViewResult(result.context, result.status)
 
 
 async def _read_arguments(scope: dict[str, Any], receive: Receive) -> dict[str, str]:
@@ -145,6 +191,7 @@ async def _respond(
     result: Result,
     templates: Environment,
 ) -> None:
+    send = _response_sender(scope, send)
     include_body = str(scope["method"]).upper() != "HEAD"
     if isinstance(result, RedirectResult):
         await _send_redirect(send, result.status, result.location)
@@ -168,6 +215,21 @@ async def _respond(
         )
         content = templates.get_template(template).render(**result.context)
         await _send_html(send, result.status, content, include_body=include_body)
+
+
+def _response_sender(scope: dict[str, Any], send: Send) -> Send:
+    cookie = scope.get("xmr.response_cookie")
+    if cookie is None:
+        return send
+
+    async def send_with_cookie(message: Message) -> None:
+        if message["type"] == "http.response.start":
+            headers = list(message.get("headers", ()))
+            headers.append((b"set-cookie", cookie))
+            message = {**message, "headers": headers}
+        await send(message)
+
+    return send_with_cookie
 
 
 async def _send_json(

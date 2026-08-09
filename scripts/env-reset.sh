@@ -53,6 +53,8 @@ reset_database() {
 
     step "Removing database"
     if ! mariadb -e '
+        DROP TABLE IF EXISTS xmr.pools;
+        DROP TABLE IF EXISTS xmr.pool_port_sequence;
         DROP TABLE IF EXISTS xmr.sessions;
         DROP TABLE IF EXISTS xmr.users;
     '; then

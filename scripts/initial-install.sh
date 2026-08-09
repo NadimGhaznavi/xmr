@@ -24,6 +24,7 @@ ADMIN_DB_USER="xmradmin"
 ADMIN_DB_PASSWORD=""
 ADMIN_WEB_PASSWORD=""
 REPLICATION_PASSWORD=""
+SESSION_SECRET=""
 CLUSTER_ROLE=""
 
 step() {
@@ -258,6 +259,7 @@ load_existing_credentials() {
             XMR_ADMIN_USER) admin_user="$value" ;;
             XMR_ADMIN_PASSWORD) ADMIN_DB_PASSWORD="$value" ;;
             XMR_ADMIN_WEB_PASSWORD) ADMIN_WEB_PASSWORD="$value" ;;
+            XMR_SESSION_SECRET) SESSION_SECRET="$value" ;;
             *)
                 echo "ERROR: Unknown setting in $REPLICATION_CREDENTIAL_FILE: $key" >&2
                 return 1
@@ -301,6 +303,10 @@ load_existing_credentials() {
         ADMIN_WEB_PASSWORD=""
     fi
     ADMIN_DB_USER="$admin_user"
+    if [[ -n "$SESSION_SECRET" && ! "$SESSION_SECRET" =~ ^[0-9a-f]{64}$ ]]; then
+        echo "ERROR: XMR_SESSION_SECRET must contain 64 lowercase hex characters." >&2
+        return 1
+    fi
     echo "Using credentials from $REPLICATION_CREDENTIAL_FILE."
 }
 
@@ -341,6 +347,7 @@ install_application() {
         "$REPO_DIR/db/AdminDb.py" \
         "$REPO_DIR/db/AppDb.py" \
         "$REPO_DIR/db/DbMgr.py" \
+        "$REPO_DIR/db/PoolDb.py" \
         "$REPO_DIR/db/SessDb.py" \
         "$REPO_DIR/db/XmrDb.py" \
         "$BASE_DIR/db/"
@@ -350,6 +357,7 @@ install_application() {
         "$REPO_DIR/mgr/AdminMgr.py" \
         "$REPO_DIR/mgr/AppMgr.py" \
         "$REPO_DIR/mgr/AcctMgr.py" \
+        "$REPO_DIR/mgr/PoolMgr.py" \
         "$REPO_DIR/mgr/SessMgr.py" \
         "$BASE_DIR/mgr/"
 
@@ -357,6 +365,7 @@ install_application() {
         "$REPO_DIR/web/__init__.py" \
         "$REPO_DIR/web/Interface.py" \
         "$REPO_DIR/web/Server.py" \
+        "$REPO_DIR/web/UserSession.py" \
         "$REPO_DIR/web/server.py" \
         "$REPO_DIR/web/session_middleware.py" \
         "$BASE_DIR/web/"
@@ -377,6 +386,8 @@ install_application() {
         "$REPO_DIR/web/templates/base.html" \
         "$REPO_DIR/web/templates/dashboard.html" \
         "$REPO_DIR/web/templates/login.html" \
+        "$REPO_DIR/web/templates/new-pool.html" \
+        "$REPO_DIR/web/templates/edit-pool.html" \
         "$REPO_DIR/web/templates/signup.html" \
         "$BASE_DIR/web/templates/"
 
@@ -402,6 +413,7 @@ create_environment_file() {
         'XMR_DB_PORT=3306' \
         'XMR_DB_NAME=xmr' \
         'XMR_DB_USER=xmr' \
+        "XMR_SESSION_SECRET=$SESSION_SECRET" \
         'XMR_P2POOL_PORT_MIN=20000' \
         'XMR_P2POOL_PORT_MAX=29999' >"$ENV_FILE"
     printf 'XMR_DB_PASSWORD="%s"\n' "$escaped_password" >>"$ENV_FILE"
@@ -451,6 +463,8 @@ create_replication_credential_file() {
     printf 'XMR_ADMIN_PASSWORD=%s\n' "$ADMIN_DB_PASSWORD" \
         >>"$REPLICATION_CREDENTIAL_FILE"
     printf 'XMR_ADMIN_WEB_PASSWORD=%s\n' "$ADMIN_WEB_PASSWORD" \
+        >>"$REPLICATION_CREDENTIAL_FILE"
+    printf 'XMR_SESSION_SECRET=%s\n' "$SESSION_SECRET" \
         >>"$REPLICATION_CREDENTIAL_FILE"
     ADMIN_WEB_PASSWORD=""
 }
@@ -506,7 +520,7 @@ initialize_database() {
     (
         cd "$BASE_DIR"
         "$BASE_DIR/venv/bin/python" -c \
-            'from db.AppDb import _USERS_SCHEMA; from db.SessDb import _SESSION_SCHEMA; print(_USERS_SCHEMA, ";", _SESSION_SCHEMA, ";")' |
+            'from db.AppDb import _USERS_SCHEMA; from db.SessDb import _SESSION_SCHEMA; from db.PoolDb import _POOL_SCHEMA; print(_USERS_SCHEMA, ";", _SESSION_SCHEMA, ";", _POOL_SCHEMA, ";")' |
             mariadb xmr
     )
     local admin_user_sql
@@ -523,6 +537,11 @@ initialize_database() {
               UPDATE (token_digest, account_id, authenticated, last_activity_at,
                       expires_at, revoked_at)
             ON xmr.sessions TO 'xmr';
+        GRANT SELECT (id, account_id, chain, port, created_at, updated_at),
+              INSERT (account_id, chain, port), UPDATE (chain)
+            ON xmr.pools TO 'xmr';
+        GRANT SELECT (id, next_port), UPDATE (next_port)
+            ON xmr.pool_port_sequence TO 'xmr';
         GRANT SELECT (id, username, wallet_address, role, status, created_at,
                       disabled_at)
             ON xmr.users TO $admin_user_sql;
@@ -616,6 +635,10 @@ main() {
         prompt_admin_password
     fi
     [[ -n "$ADMIN_WEB_PASSWORD" ]] || prompt_admin_web_password
+    if [[ -z "$SESSION_SECRET" ]]; then
+        SESSION_SECRET=$(printf '%s' "$DB_PASSWORD" | python3 -c \
+            'import hashlib, sys; print(hashlib.sha256(b"xmr-session-v1\0" + sys.stdin.buffer.read()).hexdigest())')
+    fi
 
     step "Creating installation directories"
     create_directories

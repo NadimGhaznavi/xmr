@@ -9,6 +9,7 @@ from typing import Protocol
 from db.AppDb import (
     AppDb,
     DuplicateUserError,
+    LoginAccount,
     User,
     UserRole,
 )
@@ -32,9 +33,12 @@ class AccountStore(Protocol):
         role: UserRole = "user",
     ) -> User: ...
 
+    def find_login_account(self, username: str) -> LoginAccount | None: ...
+
 
 class Hasher(Protocol):
     def hash(self, password: str | bytes) -> str: ...
+    def verify(self, password_hash: str, password: str | bytes) -> bool: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,6 +51,10 @@ class AccountValidationError(ValueError):
 
 class AccountAlreadyExistsError(RuntimeError):
     """Raised when the username or wallet is already registered."""
+
+
+class InvalidCredentialsError(RuntimeError):
+    """Raised without disclosing whether an account exists or is disabled."""
 
 
 class AcctMgr:
@@ -75,6 +83,18 @@ class AcctMgr:
             raise AccountAlreadyExistsError(
                 "the username or wallet is already registered"
             ) from error
+
+    def authenticate(self, username: str, password: str) -> User:
+        account = self._database.find_login_account(username.strip())
+        if account is None:
+            raise InvalidCredentialsError("invalid credentials")
+        try:
+            valid = self._password_hasher.verify(account.password_hash, password)
+        except Exception as error:
+            raise InvalidCredentialsError("invalid credentials") from error
+        if not valid or account.user.status != "active":
+            raise InvalidCredentialsError("invalid credentials")
+        return account.user
 
     @classmethod
     def validate_profile(cls, username: str, wallet_address: str) -> dict[str, str]:
