@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [Release 0.1.0] - 2026-08-09 08:43
+
+
 - Install and wipe environment scripts: `env-reset.sh` and `initial-install.sh`
   - Configures Caddy configuration deployment
   - Configures replication between *bama* and *wintermute*, the *hot/cold* pair that make up the cluster
