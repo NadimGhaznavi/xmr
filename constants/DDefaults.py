@@ -11,4 +11,4 @@ from typing import Final
 
 
 class DDef:
-    XMR_VERSION: Final[str] = "0.0.21"
+    XMR_VERSION: Final[str] = "0.0.22"
