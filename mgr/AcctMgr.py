@@ -76,24 +76,29 @@ class AcctMgr:
                 "the username or wallet is already registered"
             ) from error
 
-    @staticmethod
-    def _validate_signup(
-        username: str, password: str, wallet_address: str
-    ) -> dict[str, str]:
+    @classmethod
+    def validate_profile(cls, username: str, wallet_address: str) -> dict[str, str]:
         errors: dict[str, str] = {}
         if not USERNAME_PATTERN.fullmatch(username):
             errors["username"] = (
                 "Use 1–32 letters, numbers, underscores, or hyphens; "
                 "start and end with a letter or number."
             )
+        if not MONERO_ADDRESS_PATTERN.fullmatch(wallet_address):
+            errors["wallet"] = "Enter a valid mainnet Monero wallet address."
+        return errors
+
+    @staticmethod
+    def _validate_signup(
+        username: str, password: str, wallet_address: str
+    ) -> dict[str, str]:
+        errors = AcctMgr.validate_profile(username, wallet_address)
         if len(password) < 12:
             # This is a validation message, not a hard-coded credential.
             errors["password"] = "Use at least 12 characters."  # nosec B105
         elif len(password) > 1024:
             # This is a validation message, not a hard-coded credential.
             errors["password"] = "Password is too long."  # nosec B105
-        if not MONERO_ADDRESS_PATTERN.fullmatch(wallet_address):
-            errors["wallet"] = "Enter a valid mainnet Monero wallet address."
         return errors
 
 

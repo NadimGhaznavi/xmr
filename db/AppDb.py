@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Literal
 
 from .DbMgr import DbMgr
 from .XmrDb import XmrDb
 
 UserRole = Literal["user", "admin"]
+UserStatus = Literal["active", "disabled"]
 
 
 class DuplicateUserError(RuntimeError):
@@ -21,6 +23,9 @@ class User:
     username: str
     wallet_address: str
     role: UserRole
+    status: UserStatus = "active"
+    created_at: datetime | None = None
+    disabled_at: datetime | None = None
 
 
 class AppDb:
@@ -68,7 +73,9 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash VARCHAR(255) NOT NULL,
     wallet_address VARCHAR(106) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
     role ENUM('user', 'admin') NOT NULL DEFAULT 'user',
+    status ENUM('active', 'disabled') NOT NULL DEFAULT 'active',
     created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    disabled_at DATETIME(6) NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uq_users_username (username),
     UNIQUE KEY uq_users_wallet (wallet_address)

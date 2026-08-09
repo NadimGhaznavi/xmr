@@ -48,19 +48,24 @@ class DatabaseConfig:
     connect_timeout: int = 10
 
     @classmethod
-    def from_env(cls, environment: Mapping[str, str] | None = None) -> "DatabaseConfig":
+    def from_env(
+        cls,
+        environment: Mapping[str, str] | None = None,
+        *,
+        prefix: str = "XMR_DB_",
+    ) -> "DatabaseConfig":
         env = os.environ if environment is None else environment
-        password = env.get("XMR_DB_PASSWORD", "")
+        password = env.get(f"{prefix}PASSWORD", "")
         if not password:
-            raise DatabaseConfigurationError("XMR_DB_PASSWORD is required")
+            raise DatabaseConfigurationError(f"{prefix}PASSWORD is required")
 
-        port = _read_positive_int(env, "XMR_DB_PORT", 3306, maximum=65535)
-        timeout = _read_positive_int(env, "XMR_DB_CONNECT_TIMEOUT", 10)
+        port = _read_positive_int(env, f"{prefix}PORT", 3306, maximum=65535)
+        timeout = _read_positive_int(env, f"{prefix}CONNECT_TIMEOUT", 10)
         return cls(
-            host=env.get("XMR_DB_HOST", "localhost"),
+            host=env.get(f"{prefix}HOST", "localhost"),
             port=port,
-            database=env.get("XMR_DB_NAME", "xmr"),
-            user=env.get("XMR_DB_USER", "xmr"),
+            database=env.get(f"{prefix}NAME", "xmr"),
+            user=env.get(f"{prefix}USER", "xmr"),
             password=password,
             connect_timeout=timeout,
         )
