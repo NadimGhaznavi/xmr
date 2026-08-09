@@ -37,7 +37,14 @@ class JsonResult:
     status: int = 200
 
 
-Result = ViewResult | RedirectResult | JsonResult
+@dataclass(frozen=True, slots=True)
+class BinaryResult:
+    content: bytes
+    content_type: str
+    status: int = 200
+
+
+Result = ViewResult | RedirectResult | JsonResult | BinaryResult
 Operation = Callable[[Arguments], Result]
 Handler = Callable[[dict[str, Any], Receive, Send], Awaitable[None]]
 
@@ -141,6 +148,14 @@ async def _respond(
     include_body = str(scope["method"]).upper() != "HEAD"
     if isinstance(result, RedirectResult):
         await _send_redirect(send, result.status, result.location)
+    elif isinstance(result, BinaryResult):
+        await _send_binary(
+            send,
+            result.status,
+            result.content,
+            result.content_type,
+            include_body=include_body,
+        )
     elif isinstance(result, JsonResult):
         await _send_json(send, result.status, result.payload, include_body=include_body)
     elif route.template is None:
@@ -187,6 +202,28 @@ async def _send_html(
             "headers": [
                 (b"content-type", b"text/html; charset=utf-8"),
                 (b"content-length", str(len(body)).encode("ascii")),
+            ],
+        }
+    )
+    await send({"type": "http.response.body", "body": body if include_body else b""})
+
+
+async def _send_binary(
+    send: Send,
+    status: int,
+    body: bytes,
+    content_type: str,
+    *,
+    include_body: bool = True,
+) -> None:
+    await send(
+        {
+            "type": "http.response.start",
+            "status": status,
+            "headers": [
+                (b"content-type", content_type.encode("ascii")),
+                (b"content-length", str(len(body)).encode("ascii")),
+                (b"cache-control", b"public, max-age=86400"),
             ],
         }
     )

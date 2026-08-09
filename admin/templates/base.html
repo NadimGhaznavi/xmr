@@ -9,6 +9,9 @@
         * { box-sizing: border-box; }
         body { margin: 0; padding: 2rem; }
         main { width: min(72rem, 100%); margin: auto; }
+        header { margin-bottom: 2rem; text-align: center; }
+        header img { width: 5rem; height: 5rem; border-radius: 50%; }
+        header h1 { margin: 0.75rem 0 0; }
         a { color: #ff9a55; }
         table { width: 100%; border-collapse: collapse; background: #181d22; }
         th, td { padding: 0.8rem; border-bottom: 1px solid #343a40; text-align: left; }
@@ -24,6 +27,12 @@
     </style>
 </head>
 <body>
-    <main>{% block content %}{% endblock %}</main>
+    <main>
+        <header>
+            <img src="/img/logo.png" alt="Bear and Moose XMR">
+            <h1>Admin Dashboard</h1>
+        </header>
+        {% block content %}{% endblock %}
+    </main>
 </body>
 </html>

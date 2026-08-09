@@ -12,10 +12,7 @@ Group=xmr-admin
 WorkingDirectory=/opt/xmr
 EnvironmentFile=/opt/xmr/etc/xmr-admin.env
 
-ExecStart=/opt/xmr/venv/bin/uvicorn admin.server:app \
-    --host 0.0.0.0 \
-    --port 8001 \
-    --no-server-header
+ExecStart=/opt/xmr/venv/bin/python -m admin.server
 
 Restart=on-failure
 RestartSec=5
