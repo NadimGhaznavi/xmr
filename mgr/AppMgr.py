@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from mgr.AcctMgr import AccountAlreadyExistsError, AccountValidationError, AcctMgr
-from web.Interface import JsonResult, RedirectResult, Result, ViewResult
+from web.Interface import JsonResult, Result, ViewResult
 
 
 def health(arguments: Mapping[str, str]) -> Result:
@@ -33,7 +33,7 @@ def new_account(arguments: Mapping[str, str]) -> Result:
     password = arguments.get("password", "")
     wallet = arguments.get("wallet", "")
     try:
-        AcctMgr().create_miner_account(username, password, wallet)
+        user = AcctMgr().create_user(username, password, wallet)
     except AccountValidationError as error:
         return ViewResult(
             _signup_context(errors=error.errors, username=username, wallet=wallet),
@@ -48,7 +48,15 @@ def new_account(arguments: Mapping[str, str]) -> Result:
             ),
             409,
         )
-    return RedirectResult("/login?created=1")
+    return ViewResult(
+        {
+            "username": user.username,
+            "wallet": user.wallet_address,
+            "pools": [],
+            "total_hashrate": 0,
+            "total_payout_atomic": 0,
+        }
+    )
 
 
 def not_found(arguments: Mapping[str, str]) -> Result:
