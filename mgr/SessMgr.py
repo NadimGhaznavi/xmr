@@ -59,6 +59,29 @@ class SessMgr:
                     )
         return self._create(now)
 
+    def get_authenticated(self, token: str) -> Session | None:
+        now = datetime.now(UTC).replace(tzinfo=None)
+        if not self._valid_token_shape(token):
+            return None
+        row = self._database.find_active(self._digest(token), now)
+        if row is None or not bool(row["authenticated"]):
+            return None
+        absolute_expiry = row["absolute_expires_at"]
+        expires_at = min(now + self._idle_timeout, absolute_expiry)
+        if not self._database.touch(int(row["id"]), now, expires_at):
+            return None
+        account_id = row["account_id"]
+        if account_id is None:
+            return None
+        return Session(
+            int(row["id"]),
+            token,
+            int(account_id),
+            True,
+            expires_at,
+            absolute_expiry,
+        )
+
     def authenticate(self, session: Session, account_id: int) -> Session:
         if account_id <= 0:
             raise ValueError("account ID must be positive")

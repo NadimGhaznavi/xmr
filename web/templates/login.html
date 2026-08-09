@@ -3,7 +3,10 @@
 {% block content %}
     <h1>Welcome back</h1>
     <p class="lead">Log in to view your pool and worker activity.</p>
-    <form method="post" action="/api/login">
+    {% if form_error %}<p class="form-error" role="alert">{{ form_error }}</p>{% endif %}
+    <form method="post" action="/api">
+        <input type="hidden" name="MODULE" value="AppMgr">
+        <input type="hidden" name="METHOD" value="authenticate">
         <label for="username">Username</label>
         <input id="username" name="username" type="text" autocomplete="username" required>
 

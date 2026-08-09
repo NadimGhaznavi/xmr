@@ -48,7 +48,8 @@ class ServerTest(unittest.TestCase):
 
         self.assertEqual(response[0]["status"], 200)
         self.assertIn(b"text/html", dict(response[0]["headers"])[b"content-type"])
-        self.assertIn(b'<form method="post" action="/api/login">', response[1]["body"])
+        self.assertIn(b'<form method="post" action="/api">', response[1]["body"])
+        self.assertIn(b'name="METHOD" value="authenticate"', response[1]["body"])
 
     def test_signup_renders_jinja_template(self) -> None:
         response = self.request("/signup")
