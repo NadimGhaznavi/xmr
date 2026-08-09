@@ -29,12 +29,18 @@ require_root() {
     fi
 }
 
-verify_service_account() {
-    id "$SERVICE_USER" >/dev/null 2>&1 ||
-        { echo "ERROR: User '$SERVICE_USER' does not exist." >&2; exit 1; }
+ensure_service_account() {
+    if ! getent group "$SERVICE_GROUP" >/dev/null 2>&1; then
+        groupadd --system "$SERVICE_GROUP"
+    fi
 
-    getent group "$SERVICE_GROUP" >/dev/null 2>&1 ||
-        { echo "ERROR: Group '$SERVICE_GROUP' does not exist." >&2; exit 1; }
+    if ! id "$SERVICE_USER" >/dev/null 2>&1; then
+        useradd --system \
+            --gid "$SERVICE_GROUP" \
+            --home-dir /nonexistent \
+            --shell /usr/sbin/nologin \
+            "$SERVICE_USER"
+    fi
 }
 
 verify_install_target() {
@@ -48,30 +54,28 @@ verify_dependencies() {
     command -v python3 >/dev/null 2>&1 ||
         { echo "ERROR: python3 is not installed." >&2; exit 1; }
 
-    command -v caddy >/dev/null 2>&1 ||
-        { echo "ERROR: Caddy is not installed." >&2; exit 1; }
+    command -v apt-get >/dev/null 2>&1 ||
+        { echo "ERROR: apt-get is required to install dependencies." >&2; exit 1; }
 }
 
 install_system_dependencies() {
-    if command -v mariadb_config >/dev/null 2>&1 && \
+    if command -v caddy >/dev/null 2>&1 && \
+        command -v mariadb >/dev/null 2>&1 && \
+        command -v mariadb_config >/dev/null 2>&1 && \
         command -v cc >/dev/null 2>&1 && \
         python3 -c 'import pathlib, sysconfig; assert (pathlib.Path(sysconfig.get_path("include")) / "Python.h").is_file()' \
             >/dev/null 2>&1; then
         return
     fi
 
-    if ! command -v apt-get >/dev/null 2>&1; then
-        echo "ERROR: MariaDB Connector/C and a C compiler are required." >&2
-        echo "Install your distribution's MariaDB development, compiler," >&2
-        echo "and Python development packages, then run this script again." >&2
-        exit 1
-    fi
-
-    step "Installing MariaDB connector build dependencies"
+    step "Installing system dependencies"
     apt-get update
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
         build-essential \
+        caddy \
         libmariadb-dev \
+        mariadb-client \
+        mariadb-server \
         python3-dev
 
     command -v mariadb_config >/dev/null 2>&1 ||
@@ -320,8 +324,35 @@ create_virtualenv() {
     fi
 }
 
+sql_string() {
+    local value=$1
+    value=${value//\\/\\\\}
+    value=${value//\'/\'\'}
+    printf "'%s'" "$value"
+}
+
+provision_database() {
+    local db_password_sql replication_password_sql
+    db_password_sql=$(sql_string "$DB_PASSWORD")
+    replication_password_sql=$(sql_string "$REPLICATION_PASSWORD")
+
+    mariadb -e "
+        CREATE DATABASE IF NOT EXISTS xmr
+            CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+        CREATE USER IF NOT EXISTS 'xmr'@'localhost' IDENTIFIED BY $db_password_sql;
+        ALTER USER 'xmr'@'localhost' IDENTIFIED BY $db_password_sql;
+        GRANT ALL PRIVILEGES ON xmr.* TO 'xmr'@'localhost';
+        CREATE USER IF NOT EXISTS 'replication_user'@'%'
+            IDENTIFIED BY $replication_password_sql;
+        ALTER USER 'replication_user'@'%' IDENTIFIED BY $replication_password_sql;
+        GRANT REPLICATION SLAVE ON *.* TO 'replication_user'@'%';
+        FLUSH PRIVILEGES;
+    "
+}
+
 initialize_database() {
     mariadb -e 'SET GLOBAL read_only=OFF'
+    provision_database
     (
         cd "$BASE_DIR"
         XMR_DB_PASSWORD="$DB_PASSWORD" "$BASE_DIR/venv/bin/python" -c \
@@ -376,7 +407,7 @@ install_caddy_config() {
 
 main() {
     require_root
-    verify_service_account
+    ensure_service_account
     verify_install_target
     verify_dependencies
     install_system_dependencies
