@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Literal
 
-from constants.DDefaults import DDefault
+from constants.DDefault import DDefault
 
 from .DbMgr import DbMgr
 from .XmrDb import XmrDb

@@ -215,6 +215,6 @@ def _as_dict(cursor: Cursor, row: Sequence[Any]) -> dict[str, Any]:
 
 
 def _mariadb_connector(**options: Any) -> Connection:
-    import mariadb  # type: ignore[import-not-found]
+    import mariadb  # type: ignore[import-not-found, import-untyped]
 
     return mariadb.connect(**options)
