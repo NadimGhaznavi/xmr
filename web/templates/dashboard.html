@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · Bear and Moose XMR{% endblock %}
+{% block content %}
+    <h1>{{ username }}</h1>
+    <p class="lead">Your Monero mining dashboard</p>
+
+    <dl>
+        <dt>Wallet</dt>
+        <dd>{{ wallet }}</dd>
+        <dt>Total hashrate</dt>
+        <dd>{{ total_hashrate }} H/s</dd>
+        <dt>Total payouts</dt>
+        <dd>{{ total_payout_atomic }} atomic units</dd>
+    </dl>
+
+    <h2>Pools</h2>
+    {% if pools %}
+        <ul>
+        {% for pool in pools %}
+            <li>{{ pool.name }}</li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p class="lead">You have not created a pool yet.</p>
+    {% endif %}
+
+    <button type="button">New Pool</button>
+{% endblock %}

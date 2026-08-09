@@ -21,7 +21,12 @@ ROUTE_DEFINITIONS = {
     ("HEAD", "/signup"): Route("AppMgr:signup", "signup.html"),
 }
 ACTION_DEFINITIONS = {
-    "AppMgr:new_account": Route("AppMgr:new_account", "signup.html", blocking=True),
+    "AppMgr:new_account": Route(
+        "AppMgr:new_account",
+        "dashboard.html",
+        error_template="signup.html",
+        blocking=True,
+    ),
 }
 
 ROUTES: dict[tuple[str, str], Handler] = {

@@ -120,6 +120,6 @@ CREATE TABLE IF NOT EXISTS sessions (
     KEY ix_sessions_expiry (expires_at),
     KEY ix_sessions_account (account_id),
     CONSTRAINT fk_sessions_account FOREIGN KEY (account_id)
-        REFERENCES accounts (id) ON DELETE CASCADE
+        REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB
 """
