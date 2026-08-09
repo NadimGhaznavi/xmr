@@ -9,6 +9,6 @@ one space, and a repository-relative path.
 
 Both kinds of entries are installed. The marker is informational.
 
-Operational scripts remain in the Git checkout under `/opt/dev/xmr/scripts`
-and must not appear in an installation manifest. Manifested application files
+Operational scripts are installed root-owned under `/opt/xmr_ops` and must not
+appear in an application release manifest. Manifested application files
 are installed root-owned with read-only permissions under `/opt/xmr`.

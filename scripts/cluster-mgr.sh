@@ -3,8 +3,8 @@ set -euo pipefail
 
 readonly BASE_DIR="/opt/xmr"
 readonly SERVICE="xmr.service"
-readonly CLUSTER_SCRIPT="/opt/dev/xmr/scripts/cluster-mgr.sh"
-readonly DB_SCRIPT="/opt/dev/xmr/scripts/db-mgr.sh"
+readonly CLUSTER_SCRIPT="/opt/xmr_ops/cluster-mgr.sh"
+readonly DB_SCRIPT="/opt/xmr_ops/db-mgr.sh"
 readonly NODES=(bama wintermute)
 readonly SSH_OPTIONS=(-o BatchMode=yes -o ConnectTimeout=10)
 readonly LOCAL_NODE="$(hostname -s)"
@@ -43,7 +43,7 @@ remote() {
 }
 
 version_on() {
-    remote "$1" "cd '$BASE_DIR' && ./venv/bin/python -c 'from constants.DDefaults import DDefault; print(DDefault.XMR_VERSION)'"
+    remote "$1" "cd '$BASE_DIR' && ./venv/bin/python -c 'from constants.DDefault import DDefault; print(DDefault.XMR_VERSION)'"
 }
 
 service_on() {
