@@ -44,7 +44,7 @@ load_replication_credentials() {
         key="${line%%=*}"
         value="${line#*=}"
         case "$key" in
-            XMR_DB_USER|XMR_DB_PASSWORD) ;;
+            XMR_DB_USER|XMR_DB_PASSWORD|XMR_ADMIN_USER|XMR_ADMIN_PASSWORD) ;;
             XMR_REPLICATION_USER) XMR_REPLICATION_USER="$value" ;;
             XMR_REPLICATION_PASSWORD) XMR_REPLICATION_PASSWORD="$value" ;;
             *) fail "Unknown setting in $CREDENTIAL_FILE: $key" ;;
