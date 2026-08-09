@@ -56,12 +56,14 @@ reset_database() {
     fi
 
     step "Removing database"
-    (
+    if ! (
         cd "$BASE_DIR"
         "$python" -c \
             'import sys; from db.AppDb import AppDb; from db.SessDb import SessDb; from db.XmrDb import DatabaseConfig, XmrDb; database = XmrDb(DatabaseConfig.from_env_file(sys.argv[1])); SessDb(database).reset_schema(); AppDb(database).reset_schema()' \
             "$environment_file"
-    )
+    ); then
+        echo "WARNING: Application schema could not be removed; continuing reset." >&2
+    fi
 }
 
 restore_caddy_config() {
