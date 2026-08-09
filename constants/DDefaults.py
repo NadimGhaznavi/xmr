@@ -11,6 +11,6 @@ from typing import Final
 
 
 class DDefault:
-    XMR_VERSION: Final[str] = "0.2.2"
+    XMR_VERSION: Final[str] = "0.2.3"
     TRUSTED_LAN: Final[str] = "192.168.0.0/24"
     ADMIN_PORT: Final[str] = "8484"

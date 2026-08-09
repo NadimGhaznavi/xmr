@@ -3,16 +3,24 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from pathlib import Path
 
 from db.AdminDb import AccountNotFoundError, AdminDb
 from db.AppDb import DuplicateUserError, User, UserStatus
 from mgr.AcctMgr import AcctMgr
-from web.Interface import JsonResult, RedirectResult, Result, ViewResult
+from web.Interface import BinaryResult, JsonResult, RedirectResult, Result, ViewResult
+
+LOGO = Path(__file__).parents[1] / "web" / "static" / "img" / "logo.png"
 
 
 def health(arguments: Mapping[str, str]) -> Result:
     del arguments
     return JsonResult({"status": "ok"})
+
+
+def logo(arguments: Mapping[str, str]) -> Result:
+    del arguments
+    return BinaryResult(LOGO.read_bytes(), "image/png")
 
 
 def not_found(arguments: Mapping[str, str]) -> Result:
