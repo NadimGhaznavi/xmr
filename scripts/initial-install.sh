@@ -22,6 +22,7 @@ readonly REPLICATION_USER="replication_user"
 DB_PASSWORD=""
 ADMIN_DB_USER="xmradmin"
 ADMIN_DB_PASSWORD=""
+ADMIN_WEB_PASSWORD=""
 REPLICATION_PASSWORD=""
 CLUSTER_ROLE=""
 
@@ -196,6 +197,30 @@ prompt_admin_password() {
     done
 }
 
+prompt_admin_web_password() {
+    local confirmation=""
+
+    set +x
+    while true; do
+        printf 'Browser password for admin user %s: ' "$ADMIN_DB_USER" >&2
+        IFS= read -r -s ADMIN_WEB_PASSWORD || exit 1
+        printf '\n' >&2
+        if [[ ${#ADMIN_WEB_PASSWORD} -lt 16 ]]; then
+            echo "ERROR: The admin browser password must have at least 16 characters." >&2
+            continue
+        fi
+        if [[ "$ADMIN_WEB_PASSWORD" == "$ADMIN_DB_PASSWORD" ]]; then
+            echo "ERROR: The browser and database passwords must be different." >&2
+            continue
+        fi
+        printf 'Confirm admin browser password: ' >&2
+        IFS= read -r -s confirmation || exit 1
+        printf '\n' >&2
+        [[ "$ADMIN_WEB_PASSWORD" == "$confirmation" ]] && return
+        echo "ERROR: Passwords do not match; please try again." >&2
+    done
+}
+
 prompt_cluster_role() {
     while true; do
         read -r -p "Cluster role for this node (hot/cold): " CLUSTER_ROLE
@@ -232,6 +257,7 @@ load_existing_credentials() {
             XMR_REPLICATION_PASSWORD) REPLICATION_PASSWORD="$value" ;;
             XMR_ADMIN_USER) admin_user="$value" ;;
             XMR_ADMIN_PASSWORD) ADMIN_DB_PASSWORD="$value" ;;
+            XMR_ADMIN_WEB_PASSWORD) ADMIN_WEB_PASSWORD="$value" ;;
             *)
                 echo "ERROR: Unknown setting in $REPLICATION_CREDENTIAL_FILE: $key" >&2
                 return 1
@@ -265,6 +291,15 @@ load_existing_credentials() {
         echo "ERROR: XMR_ADMIN_PASSWORD is missing." >&2
         return 1
     }
+    if [[ -n "$ADMIN_WEB_PASSWORD" && ${#ADMIN_WEB_PASSWORD} -lt 16 ]]; then
+        echo "WARNING: XMR_ADMIN_WEB_PASSWORD must have at least 16 characters." >&2
+        ADMIN_WEB_PASSWORD=""
+    fi
+    if [[ -n "$ADMIN_WEB_PASSWORD" && \
+          "$ADMIN_WEB_PASSWORD" == "$ADMIN_DB_PASSWORD" ]]; then
+        echo "WARNING: Admin browser and database passwords must be different." >&2
+        ADMIN_WEB_PASSWORD=""
+    fi
     ADMIN_DB_USER="$admin_user"
     echo "Using credentials from $REPLICATION_CREDENTIAL_FILE."
 }
@@ -357,6 +392,7 @@ install_application() {
 create_environment_file() {
     local escaped_password="$DB_PASSWORD"
     local escaped_admin_password="$ADMIN_DB_PASSWORD"
+    local admin_web_hash
     escaped_password=${escaped_password//\\/\\\\}
     escaped_password=${escaped_password//\"/\\\"}
 
@@ -374,12 +410,26 @@ create_environment_file() {
 
     escaped_admin_password=${escaped_admin_password//\\/\\\\}
     escaped_admin_password=${escaped_admin_password//\"/\\\"}
+    admin_web_hash=$(printf '%s' "$ADMIN_WEB_PASSWORD" | python3 -c '
+import base64
+import hashlib
+import secrets
+import sys
+
+password = sys.stdin.buffer.read()
+salt = secrets.token_bytes(16)
+digest = hashlib.scrypt(password, salt=salt, n=16384, r=8, p=1, dklen=32)
+encode = lambda value: base64.b64encode(value).decode("ascii")
+print(f"scrypt$16384$8$1${encode(salt)}${encode(digest)}")
+')
     install -o root -g "$ADMIN_SERVICE_GROUP" -m 0640 /dev/null "$ADMIN_ENV_FILE"
     printf '%s\n' \
         'XMR_ADMIN_DB_HOST=localhost' \
         'XMR_ADMIN_DB_PORT=3306' \
         'XMR_ADMIN_DB_NAME=xmr' \
         "XMR_ADMIN_DB_USER=$ADMIN_DB_USER" \
+        "XMR_ADMIN_WEB_USER=$ADMIN_DB_USER" \
+        "XMR_ADMIN_WEB_PASSWORD_HASH=$admin_web_hash" \
         'XMR_TRUSTED_LAN=192.168.0.0/24' >"$ADMIN_ENV_FILE"
     printf 'XMR_ADMIN_DB_PASSWORD="%s"\n' "$escaped_admin_password" \
         >>"$ADMIN_ENV_FILE"
@@ -400,6 +450,9 @@ create_replication_credential_file() {
         >>"$REPLICATION_CREDENTIAL_FILE"
     printf 'XMR_ADMIN_PASSWORD=%s\n' "$ADMIN_DB_PASSWORD" \
         >>"$REPLICATION_CREDENTIAL_FILE"
+    printf 'XMR_ADMIN_WEB_PASSWORD=%s\n' "$ADMIN_WEB_PASSWORD" \
+        >>"$REPLICATION_CREDENTIAL_FILE"
+    ADMIN_WEB_PASSWORD=""
 }
 
 create_virtualenv() {
@@ -562,6 +615,7 @@ main() {
         prompt_replication_password
         prompt_admin_password
     fi
+    [[ -n "$ADMIN_WEB_PASSWORD" ]] || prompt_admin_web_password
 
     step "Creating installation directories"
     create_directories

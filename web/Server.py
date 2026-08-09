@@ -50,6 +50,9 @@ class Server:
             if not self.client_is_allowed(scope):
                 await self.reject_client(scope, send)
                 return
+            if not await self.request_is_authenticated(scope):
+                await self.reject_unauthenticated(scope, send)
+                return
             if not await self.site_data_is_available(scope):
                 await self.reject_unavailable(scope, send)
                 return
@@ -65,9 +68,27 @@ class Server:
         del scope
         return True
 
+    async def request_is_authenticated(self, scope: dict[str, Any]) -> bool:
+        del scope
+        return True
+
     async def reject_client(self, scope: dict[str, Any], send: Send) -> None:
         del scope
         await _plain_response(send, 403, "Forbidden")
+
+    async def reject_unauthenticated(self, scope: dict[str, Any], send: Send) -> None:
+        del scope
+        await _plain_response(
+            send,
+            401,
+            "Authentication required",
+            headers=[
+                (
+                    b"www-authenticate",
+                    b'Basic realm="Bear & Moose XMR Admin", charset="UTF-8"',
+                )
+            ],
+        )
 
     async def reject_unavailable(self, scope: dict[str, Any], send: Send) -> None:
         del scope
@@ -95,16 +116,26 @@ class Server:
                 return
 
 
-async def _plain_response(send: Send, status: int, content: str) -> None:
+async def _plain_response(
+    send: Send,
+    status: int,
+    content: str,
+    *,
+    headers: list[tuple[bytes, bytes]] | None = None,
+) -> None:
     body = content.encode("utf-8")
+    response_headers = list(headers or ())
+    response_headers.extend(
+        [
+            (b"content-type", b"text/plain; charset=utf-8"),
+            (b"content-length", str(len(body)).encode("ascii")),
+        ]
+    )
     await send(
         {
             "type": "http.response.start",
             "status": status,
-            "headers": [
-                (b"content-type", b"text/plain; charset=utf-8"),
-                (b"content-length", str(len(body)).encode("ascii")),
-            ],
+            "headers": response_headers,
         }
     )
     await send({"type": "http.response.body", "body": body})
