@@ -252,16 +252,39 @@ update_changelog() {
 
 # ----- End of functions -----
 
+usage() {
+    local current_version="unknown"
+    local example_version="0.1.0"
+
+    if [[ -f "$DDEF_FILE" ]]; then
+        current_version=$(sed -nE 's/^[[:space:]]*XMR_VERSION: Final\[str\] = "([^"]+)"$/\1/p' "$DDEF_FILE")
+
+        if [[ "$current_version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            example_version="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.$((10#${BASH_REMATCH[3]} + 1))"
+        else
+            current_version="unknown"
+        fi
+    fi
+
+    cat <<EOF
+Usage: $(basename "$0") <new_version> <release_comment> <new_feature_branch>
+
+Current project version: $current_version
+
+Example:
+  $(basename "$0") $example_version "v$example_version - DevOps Flow Release" feat/newWidget
+
+Arguments:
+  new_version         Semantic version number, e.g. $example_version
+  release_comment     Git commit/tag message, e.g. "v$example_version - DevOps Flow Release"
+  new_feature_branch  New feature branch to create after release, e.g. feat/newWidget
+EOF
+}
+
 # Check if required arguments are provided
 if [ $# -ne 3 ]; then
     print_error "Invalid number of arguments"
-    echo "Usage: $0 <new_version> <release_comment> <new_feature_branch>"
-    echo "Example: $0 0.15.20 \"v0.15.20 - DevOps Flow Release\" feat/newWidget"
-    echo ""
-    echo "Arguments:"
-    echo "  new_version         Semantic version number, e.g. 0.15.20"
-    echo "  release_comment     Git commit/tag message, e.g. \"v0.15.20 - DevOps Flow Release\""
-    echo "  new_feature_branch  New feature branch to create after release, e.g. feat/newWidget"
+    usage
     exit 1
 fi
 
