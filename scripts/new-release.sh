@@ -255,12 +255,14 @@ update_changelog() {
 usage() {
     local current_version="unknown"
     local example_version="0.1.0"
+    local example_branch="feat/base-0.1.1"
 
     if [[ -f "$DDEF_FILE" ]]; then
         current_version=$(sed -nE 's/^[[:space:]]*XMR_VERSION: Final\[str\] = "([^"]+)"$/\1/p' "$DDEF_FILE")
 
         if [[ "$current_version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
             example_version="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.$((10#${BASH_REMATCH[3]} + 1))"
+            example_branch="feat/base-${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.$((10#${BASH_REMATCH[3]} + 2))"
         else
             current_version="unknown"
         fi
@@ -272,12 +274,12 @@ Usage: $(basename "$0") <new_version> <release_comment> <new_feature_branch>
 Current project version: $current_version
 
 Example:
-  $(basename "$0") $example_version "v$example_version - DevOps Flow Release" feat/newWidget
+  $(basename "$0") $example_version "release_name" $example_branch
 
 Arguments:
   new_version         Semantic version number, e.g. $example_version
-  release_comment     Git commit/tag message, e.g. "v$example_version - DevOps Flow Release"
-  new_feature_branch  New feature branch to create after release, e.g. feat/newWidget
+  release_comment     Git commit/tag message, e.g. "release_name"
+  new_feature_branch  New feature branch to create after release, e.g. $example_branch
 EOF
 }
 
