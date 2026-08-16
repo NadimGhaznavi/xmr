@@ -15,23 +15,23 @@ remote_theme: "NadimGhaznavi/minimal-mistakes"
 #remote_theme: "mmistakes/minimal-mistakes"
 
 # "air", "aqua", "contrast", "dark", "dirt", "neon", "mint", "plum", "sunrise"
-minimal_mistakes_skin: "neon"
+minimal_mistakes_skin: "dark"
 #minimal_mistakes_skin: "sunrise"
 #minimal_mistakes_skin: "air"
 
 # Site Settings
 locale: "en-US"
 rtl: # true, false (default) # turns direction of the page into right to left for RTL languages
-title: "XMR DEV"
+title: "P2Pool Mining"
 title_separator: "-"
 subtitle: # site tagline that appears below site title in masthead
-name: "XMR Mining Pool"
-description: "SDLC"
+name: "P2Pool Mining"
+description: ""
 url: https://xmr.osoyalce.com/ # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
 baseurl: "/" # the subpath of your site, e.g. "/blog"
 repository: NadimGhaznavi/xmr # GitHub username/repo-name e.g. "mmistakes/minimal-mistakes"
 teaser: # path of fallback teaser image, e.g. "/assets/images/500x300.png"
-logo: "/pages/img/logo.png" # /images/banner.png # path of logo image to display in the masthead, e.g. "/assets/images/88x88.png"
+logo: "/pages/images/xmr-logo.png"
 masthead_title: # overrides the website title displayed in the masthead, use " " for no title
 breadcrumbs: # true, false (default)
 words_per_minute: 200
@@ -117,27 +117,12 @@ analytics:
 
 # Site Author
 author:
-  name: "Nadim-Daniel"
+  name: "Nadim-Daniel Ghaznavi"
   avatar: # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
-  bio: "Human Bean"
+  bio: "Administrator"
   location: "Hamilton, ON"
   email: "nghaznavi@gmail.com"
   links:
-    - label: "Website"
-      icon: "fas fa-fw fa-link"
-      url: "https://www.osoyalce.com"
-    - label: "Twitter"
-      icon: "fab fa-fw fa-twitter-square"
-      url: "https://x.com/NadimDGhaznavi"
-    - label: "Facebook"
-      icon: "fab fa-fw fa-facebook-square"
-      url: "https://www.facebook.com/nadim.ghaznavi"
-    - label: "GitHub"
-      icon: "fab fa-fw fa-github"
-      url: "https://github.com/NadimGhaznavi/"
-    - label: "Instagram"
-      icon: "fab fa-fw fa-instagram"
-      url: "https://www.instagram.com/nadimghaznavi/"
 
 # Site Footer
 footer:
@@ -160,12 +145,12 @@ footer:
     - label: "Instagram"
       icon: "fab fa-fw fa-instagram"
       # url:
-  since: "2013"
+  since: "2026"
 
 # Reading Files
 include:
   - .htaccess
-  - _pages
+  - pages
 exclude:
   - "*.sublime-project"
   - "*.sublime-workspace"
