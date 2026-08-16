@@ -3,11 +3,14 @@ layout: home
 author_profile: true
 ---
 
-![Logo](/pages/img/logo.png)
+![XMR Logo](/pages/images/xmr_logo.png)
 
-# Releases
+---
 
-- [Releases](/releases/README.html)
+# Implementations
+
+- [P2Pool API](/pages/implementations/p2pool_api.html)
+- [P2Pool Log](/pages/implementations/p2pool_log.html)
 
 ---
 
