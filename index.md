@@ -32,7 +32,7 @@ The following DNS names identify the development environment’s services.
 
 ## QA Environment
 
-The QA environment has a pair of machines that are a hot/cold cluster.
+The QA environment has a pair of machines that are in an active/passive cluster.
 
 The cluster uses a DNS name to route traffic.
 
@@ -62,13 +62,13 @@ The cluster uses a DNS name to route traffic.
 
 ## Production Environment
 
-The production environment has a pair of machines that are a active/passive cluster.
+The production environment has a pair of machines that are in an active/passive cluster.
 
 The cluster uses a DNS name to route traffic.
 
-| Component   | Record type | DNS name            |
-|-------------|-------------|---------------------|
-| Cluster VIP | CNAME       | `xmr.osoyalce.com`  |
+| Component | Record type | DNS name            |
+|-----------|-------------|---------------------|
+| Cluster   | CNAME       | `xmr.osoyalce.com`  |
 
 
 ### Production Server 1
