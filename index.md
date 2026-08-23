@@ -66,9 +66,9 @@ The production environment has a pair of machines that are a active/passive clus
 
 The cluster uses a DNS name to route traffic.
 
-| Component   | Record type | DNS name            |
-|-------------|-------------|---------------------|
-| Cluster VIP | CNAME       | `xmr.osoyalce.com`  |
+| Component | Record type | DNS name            |
+|-----------|-------------|---------------------|
+| Cluster   | CNAME       | `xmr.osoyalce.com`  |
 
 
 ### Production Server 1
