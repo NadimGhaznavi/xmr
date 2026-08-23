@@ -9,41 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [Release 0.3.6] - 2026-08-23 16:29
+- Added a `dns-report.sh` script for *DevOps* to sanity check the environment.
 
-
-## [Release 0.3.5] - 2026-08-16 16:02
-
-
-## [Release 0.3.4] - 2026-08-16 15:57
-
-
-## [Release 0.3.3] - 2026-08-15 12:26
-
-
-## [Release 0.3.2] - 2026-08-15 12:20
-
-
-## [Release 0.3.1] - 2026-08-09 17:39
-
-
-## [Release 0.3.0] - 2026-08-09 11:25
-
-
-## [Release 0.2.4] - 2026-08-09 11:17
-
-
-## [Release 0.2.3] - 2026-08-09 10:53
-
-
-## [Release 0.2.2] - 2026-08-09 10:41
-
-
-## [Release 0.2.1] - 2026-08-09 10:38
-
+---
 
 ## [Release 0.2.0] - 2026-08-09 10:25
-
 
 - Added a new *Admin* server instance with account management capability.
 
