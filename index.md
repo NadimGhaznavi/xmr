@@ -1,4 +1,5 @@
 ---
+title: XMR P2Pool Mining Docs
 layout: home
 author_profile: true
 ---
