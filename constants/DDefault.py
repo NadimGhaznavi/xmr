@@ -11,7 +11,7 @@ from typing import Final
 
 
 class DDefault:
-    XMR_VERSION: Final[str] = "0.3.7"
+    XMR_VERSION: Final[str] = "0.3.8"
     INSTALL_DIR: Final[str] = "/opt/xmr"
     OPS_DIR: Final[str] = "/opt/xmr_ops"
     SERVICE_USER: Final[str] = "xmr"
