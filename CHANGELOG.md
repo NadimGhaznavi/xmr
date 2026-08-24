@@ -9,11 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [Release 0.3.10] - 2026-08-24 03:39
+### Fixed 
 
+- Corrected site URL in `_config.yml`
+
+---
 
 ## [Release 0.3.9] - 2026-08-24 03:29
-
 
 - Cleaned up the website, organized it
 
