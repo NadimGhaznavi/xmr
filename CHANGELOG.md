@@ -9,8 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [Release 0.3.7] - 2026-08-23 17:19
+---
 
+## [Release 0.3.7] - 2026-08-23 17:19
 
 - Added a `dns-report.sh` script for *DevOps* to sanity check the environment.
 
