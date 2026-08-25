@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [Release 0.4.0] - 2026-08-25 04:56
+
+
 ### Added
 
 - Created `constats/DHost.py` file to track the hosts, roles and environments that make up the app
