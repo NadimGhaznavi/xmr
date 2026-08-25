@@ -21,6 +21,7 @@ The following DNS names identify the development environment’s services.
 |-----------------|-------------|------------------------------|
 | Bare-metal host | Hostname    | `sally.osoyalce.com`         |
 | Web service     | CNAME       | `xmr-dev.osoyalce.com`       |
+| App service     | CNAME       | `xmr-app-dev.osoyalce.com`   |
 | Admin service   | CNAME       | `xmr-admin-dev.osoyalce.com` |
 | DB server       | CNAME       | `xmr-db-dev.osoyalce.com`    |
 
@@ -42,6 +43,7 @@ The cluster uses a DNS name to route traffic.
 |-----------------|-------------|------------------------------|
 | Bare-metal host | Hostname    | `islands.osoyalce.com`       |
 | Web service     | CNAME       | `xmr1-qa.osoyalce.com`       |
+| App service     | CNAME       | `xmr-app1-qa.osoyalce.com`   |
 | Admin service   | CNAME       | `xmr-admin1-qa.osoyalce.com` |
 | DB server       | CNAME       | `xmr-db1-qa.osoyalce.com`    |
 
@@ -51,6 +53,7 @@ The cluster uses a DNS name to route traffic.
 |-----------------|-------------|------------------------------|
 | Bare-metal host | Hostname    | `kermit.osoyalce.com`        |
 | Web service     | CNAME       | `xmr2-qa.osoyalce.com`       |
+| App service     | CNAME       | `xmr-app2-qa.osoyalce.com`   |
 | Admin service   | CNAME       | `xmr-admin2-qa.osoyalce.com` |
 | DB server       | CNAME       | `xmr-db2-qa.osoyalce.com`    |
 
@@ -73,6 +76,7 @@ The cluster uses a DNS name to route traffic.
 |-----------------|-------------|---------------------------|
 | Bare-metal host | Hostname    | `bama.osoyalce.com`       |
 | Web service     | CNAME       | `xmr1.osoyalce.com`       |
+| App service     | CNAME       | `xmr-app1.osoyalce.com`   |
 | Admin service   | CNAME       | `xmr-admin1.osoyalce.com` |
 | DB server       | CNAME       | `xmr-db1.osoyalce.com`    |
 
@@ -82,6 +86,7 @@ The cluster uses a DNS name to route traffic.
 |-----------------|-------------|------------------------------|
 | Bare-metal host | Hostname    | `wintermute.osoyalce.com`    |
 | Web service     | CNAME       | `xmr2.osoyalce.com`          |
+| App service     | CNAME       | `xmr-app2.osoyalce.com`   |
 | Admin service   | CNAME       | `xmr-admin2.osoyalce.com`    |
 | DB server       | CNAME       | `xmr-db2.osoyalce.com`       |
 
