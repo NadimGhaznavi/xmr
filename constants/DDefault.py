@@ -11,7 +11,7 @@ from typing import Final
 
 
 class DDefault:
-    XMR_VERSION: Final[str] = "0.3.11"
+    XMR_VERSION: Final[str] = "0.4.0"
     INSTALL_DIR: Final[str] = "/opt/xmr"
     OPS_DIR: Final[str] = "/opt/xmr_ops"
     SERVICE_USER: Final[str] = "xmr"
@@ -24,3 +24,4 @@ class DDefault:
     ADMIN_PORT: Final[int] = 8484
     PUBLIC_PORT: Final[int] = 8000
     STARTING_P2POOL_PORT: Final[int] = 33333
+
