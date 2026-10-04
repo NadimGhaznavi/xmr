@@ -1,0 +1,31 @@
+(xmr_web) {
+	encode zstd gzip
+
+	handle /api {
+		reverse_proxy 127.0.0.1:8000
+	}
+
+	@account_pages path /login /signup /dashboard /pool /pool/new
+	handle @account_pages {
+		reverse_proxy 127.0.0.1:8000
+	}
+
+	handle {
+		root * /opt/xmr/web/static
+		file_server
+	}
+}
+
+__WEB_HOST__ {
+	tls __CERT_DIR__/__WEB_HOST__.crt __CERT_DIR__/__WEB_HOST__.key
+	import xmr_web
+}
+
+__ADMIN_HOST__ {
+	tls __CERT_DIR__/__ADMIN_HOST__.crt __CERT_DIR__/__ADMIN_HOST__.key
+
+	@outside_lan not remote_ip 192.168.0.0/24 127.0.0.0/8 ::1
+	abort @outside_lan
+
+	reverse_proxy 127.0.0.1:8484
+}

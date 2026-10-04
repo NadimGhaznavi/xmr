@@ -8,7 +8,7 @@ layout: single
 
 ## System Operator
 
-- [Install XMR Pool software](/pages/use-cases/install-xmr-pool-software.html)
+- Install XMR Pool software
 - Configure XMR Pool
 - Start XMR Pool service
 - Stop XMR Pool service

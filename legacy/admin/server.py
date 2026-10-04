@@ -178,8 +178,8 @@ if __name__ == "__main__":
 
     uvicorn.run(
         app,
-        # AdminServer rejects peers outside TRUSTED_LAN before authentication.
-        host="0.0.0.0",  # nosec B104
+        # Caddy enforces the LAN boundary and is the only HTTP entry point.
+        host="127.0.0.1",
         port=int(DDefault.ADMIN_PORT),
         server_header=False,
     )

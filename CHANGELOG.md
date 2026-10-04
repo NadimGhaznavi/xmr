@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added environment and initial-role options to `initial-install.sh`.
+- Added CA certificate installation from the automounted NFS share and node-specific HTTPS configuration.
+
+### Changed
+
+- Restricted the admin service to Caddy's loopback proxy and LAN-only HTTPS site.
+
 ## [Release 0.4.0] - 2026-08-25 04:56
 
 

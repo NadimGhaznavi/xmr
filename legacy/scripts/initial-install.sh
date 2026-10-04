@@ -16,6 +16,9 @@ readonly CADDY_CONFIG_DIR="/etc/caddy"
 readonly CADDY_FILE="$CADDY_CONFIG_DIR/Caddyfile"
 readonly CADDY_BACKUP="$BASE_DIR/etc/Caddyfile.before-xmr"
 readonly CADDY_ACTIVE_MARKER="$BASE_DIR/etc/caddy-was-active"
+readonly CADDY_CERT_DIR="$BASE_DIR/etc/caddy"
+readonly CERT_SOURCE_DIR="/imports/bmca_certs"
+readonly LEAF_KEY_PASSWORD_FILE="/root/.bmca-leaf"
 readonly ENV_FILE="$BASE_DIR/etc/xmr.env"
 readonly ADMIN_ENV_FILE="$BASE_DIR/etc/xmr-admin.env"
 readonly REPLICATION_CREDENTIAL_FILE="/root/.xmr"
@@ -27,6 +30,102 @@ ADMIN_WEB_PASSWORD=""
 REPLICATION_PASSWORD=""
 SESSION_SECRET=""
 CLUSTER_ROLE=""
+ENVIRONMENT=""
+WEB_HOST=""
+ADMIN_HOST=""
+PUBLIC_HOST=""
+CERT_WORK_DIR=""
+
+usage() {
+    cat <<EOF
+Usage: $(basename "$0") --environment dev|qa|prod [--initial-role hot|cold]
+
+Development is always installed as a hot, standalone node. QA and production
+require an initial cluster role. The local hostname determines node identity.
+EOF
+}
+
+parse_arguments() {
+    while (($#)); do
+        case "$1" in
+            --environment|--env)
+                [[ $# -ge 2 ]] || { usage >&2; exit 2; }
+                ENVIRONMENT=$2
+                shift 2
+                ;;
+            --initial-role|--role)
+                [[ $# -ge 2 ]] || { usage >&2; exit 2; }
+                CLUSTER_ROLE=$2
+                shift 2
+                ;;
+            -h|--help)
+                usage
+                exit 0
+                ;;
+            *)
+                usage >&2
+                echo "ERROR: Unknown argument: $1" >&2
+                exit 2
+                ;;
+        esac
+    done
+
+    case "$ENVIRONMENT" in
+        dev)
+            [[ -z "$CLUSTER_ROLE" || "$CLUSTER_ROLE" == "hot" ]] || {
+                echo "ERROR: Development must use the hot role." >&2
+                exit 2
+            }
+            CLUSTER_ROLE="hot"
+            ;;
+        qa|prod)
+            [[ "$CLUSTER_ROLE" == "hot" || "$CLUSTER_ROLE" == "cold" ]] || {
+                echo "ERROR: QA and production require --initial-role hot|cold." >&2
+                exit 2
+            }
+            ;;
+        *)
+            usage >&2
+            echo "ERROR: --environment must be dev, qa, or prod." >&2
+            exit 2
+            ;;
+    esac
+}
+
+configure_node_identity() {
+    local node
+    node=$(hostname -s)
+    case "$ENVIRONMENT:$node" in
+        dev:sally)
+            WEB_HOST="xmr-dev.osoyalce.com"
+            ADMIN_HOST="xmr-admin-dev.osoyalce.com"
+            ;;
+        qa:islands)
+            WEB_HOST="xmr1-qa.osoyalce.com"
+            ADMIN_HOST="xmr-admin1-qa.osoyalce.com"
+            ;;
+        qa:kermit)
+            WEB_HOST="xmr2-qa.osoyalce.com"
+            ADMIN_HOST="xmr-admin2-qa.osoyalce.com"
+            ;;
+        prod:bama)
+            WEB_HOST="xmr1.osoyalce.com"
+            ADMIN_HOST="xmr-admin1.osoyalce.com"
+            ;;
+        prod:wintermute)
+            WEB_HOST="xmr2.osoyalce.com"
+            ADMIN_HOST="xmr-admin2.osoyalce.com"
+            ;;
+        *)
+            echo "ERROR: Host '$node' is not a member of the $ENVIRONMENT environment." >&2
+            exit 1
+            ;;
+    esac
+
+    if [[ "$ENVIRONMENT" == "prod" && "$CLUSTER_ROLE" == "hot" ]]; then
+        PUBLIC_HOST="xmr.osoyalce.com"
+    fi
+}
 
 step() {
     printf '\n==> %s\n' "$1"
@@ -87,6 +186,7 @@ install_system_dependencies() {
     if command -v caddy >/dev/null 2>&1 && \
         command -v mariadb >/dev/null 2>&1 && \
         command -v mariadb_config >/dev/null 2>&1 && \
+        command -v openssl >/dev/null 2>&1 && \
         command -v cc >/dev/null 2>&1 && \
         python3 -c 'import pathlib, sysconfig; assert (pathlib.Path(sysconfig.get_path("include")) / "Python.h").is_file()' \
             >/dev/null 2>&1; then
@@ -101,6 +201,7 @@ install_system_dependencies() {
         libmariadb-dev \
         mariadb-client \
         mariadb-server \
+        openssl \
         python3-dev
 
     command -v mariadb_config >/dev/null 2>&1 ||
@@ -224,16 +325,6 @@ prompt_admin_web_password() {
         printf '\n' >&2
         [[ "$ADMIN_WEB_PASSWORD" == "$confirmation" ]] && return
         echo "ERROR: Passwords do not match; please try again." >&2
-    done
-}
-
-prompt_cluster_role() {
-    while true; do
-        read -r -p "Cluster role for this node (hot/cold): " CLUSTER_ROLE
-        case "$CLUSTER_ROLE" in
-            hot|cold) return ;;
-            *) echo "ERROR: Role must be 'hot' or 'cold'." >&2 ;;
-        esac
     done
 }
 
@@ -456,7 +547,7 @@ print(f"scrypt$16384$8$1${encode(salt)}${encode(digest)}")
         "XMR_ADMIN_DB_USER=$ADMIN_DB_USER" \
         "XMR_ADMIN_WEB_USER=$ADMIN_DB_USER" \
         "XMR_ADMIN_WEB_PASSWORD_HASH=$admin_web_hash" \
-        'XMR_TRUSTED_LAN=192.168.0.0/24' >"$ADMIN_ENV_FILE"
+        'XMR_TRUSTED_LAN=127.0.0.0/8' >"$ADMIN_ENV_FILE"
     printf 'XMR_ADMIN_DB_PASSWORD="%s"\n' "$escaped_admin_password" \
         >>"$ADMIN_ENV_FILE"
     escaped_admin_password=""
@@ -617,6 +708,69 @@ start_admin_service() {
 }
 
 install_caddy_config() {
+    local archive checksum work_dir
+    archive="xmr-certs-$ENVIRONMENT.tar.gz"
+    checksum="$archive.sha256"
+    work_dir=$(mktemp -d /tmp/xmr-certs-install.XXXXXX)
+    CERT_WORK_DIR="$work_dir"
+    trap '[[ -z "$CERT_WORK_DIR" ]] || rm -rf -- "$CERT_WORK_DIR"' EXIT
+
+    [[ -d "$CERT_SOURCE_DIR" ]] || {
+        echo "ERROR: Certificate share is not mounted at $CERT_SOURCE_DIR." >&2
+        exit 1
+    }
+    [[ -r "$CERT_SOURCE_DIR/$archive" && -r "$CERT_SOURCE_DIR/$checksum" ]] || {
+        echo "ERROR: $ENVIRONMENT certificate archive or checksum is unavailable in $CERT_SOURCE_DIR." >&2
+        exit 1
+    }
+
+    step "Reading $ENVIRONMENT certificates"
+    install -o root -g root -m 0600 \
+        "$CERT_SOURCE_DIR/$archive" "$work_dir/$archive"
+    install -o root -g root -m 0600 \
+        "$CERT_SOURCE_DIR/$checksum" "$work_dir/$checksum"
+    (cd "$work_dir" && sha256sum --check "$checksum")
+
+    tar -C "$work_dir" -xzf "$work_dir/$archive" \
+        "certificates/$WEB_HOST.crt" \
+        "certificates/$WEB_HOST.key" \
+        "certificates/$ADMIN_HOST.crt" \
+        "certificates/$ADMIN_HOST.key"
+
+    [[ -f "$LEAF_KEY_PASSWORD_FILE" ]] || {
+        echo "ERROR: Required CA leaf-key password file is missing: $LEAF_KEY_PASSWORD_FILE" >&2
+        exit 1
+    }
+    [[ "$(stat -c '%U:%G:%a' "$LEAF_KEY_PASSWORD_FILE")" == "root:root:600" ]] || {
+        echo "ERROR: $LEAF_KEY_PASSWORD_FILE must be owned by root:root with mode 0600." >&2
+        exit 1
+    }
+    [[ -s "$LEAF_KEY_PASSWORD_FILE" ]] || {
+        echo "ERROR: $LEAF_KEY_PASSWORD_FILE is empty." >&2
+        exit 1
+    }
+
+    install -d -o root -g caddy -m 0750 "$CADDY_CERT_DIR"
+    install -o root -g caddy -m 0644 \
+        "$work_dir/certificates/$WEB_HOST.crt" \
+        "$work_dir/certificates/$ADMIN_HOST.crt" \
+        "$CADDY_CERT_DIR/"
+    openssl pkey \
+        -in "$work_dir/certificates/$WEB_HOST.key" \
+        -passin "file:$LEAF_KEY_PASSWORD_FILE" \
+        -out "$work_dir/$WEB_HOST.key"
+    openssl pkey \
+        -in "$work_dir/certificates/$ADMIN_HOST.key" \
+        -passin "file:$LEAF_KEY_PASSWORD_FILE" \
+        -out "$work_dir/$ADMIN_HOST.key"
+    install -o root -g caddy -m 0640 \
+        "$work_dir/$WEB_HOST.key" \
+        "$work_dir/$ADMIN_HOST.key" \
+        "$CADDY_CERT_DIR/"
+
+    openssl x509 -in "$CADDY_CERT_DIR/$WEB_HOST.crt" -noout -checkhost "$WEB_HOST"
+    openssl x509 -in "$CADDY_CERT_DIR/$ADMIN_HOST.crt" -noout -checkhost "$ADMIN_HOST"
+
     install -d -o root -g root -m 0755 "$CADDY_CONFIG_DIR"
 
     if [[ -f "$CADDY_FILE" ]]; then
@@ -627,22 +781,40 @@ install_caddy_config() {
         install -o root -g root -m 0600 /dev/null "$CADDY_ACTIVE_MARKER"
     fi
 
-    install -o root -g root -m 0644 \
-        "$REPO_DIR/systemd/Caddyfile" \
-        "$CADDY_FILE"
+    sed \
+        -e "s|__WEB_HOST__|$WEB_HOST|g" \
+        -e "s|__ADMIN_HOST__|$ADMIN_HOST|g" \
+        -e "s|__CERT_DIR__|$CADDY_CERT_DIR|g" \
+        "$REPO_DIR/systemd/Caddyfile" >"$CADDY_FILE"
+    chown root:root "$CADDY_FILE"
+    chmod 0644 "$CADDY_FILE"
+
+    if [[ -n "$PUBLIC_HOST" ]]; then
+        cat >>"$CADDY_FILE" <<EOF
+
+$PUBLIC_HOST {
+	import xmr_web
+}
+EOF
+    fi
 
     caddy fmt --overwrite "$CADDY_FILE"
     caddy validate --config "$CADDY_FILE"
     systemctl reload-or-restart caddy.service
+
+    rm -rf -- "$CERT_WORK_DIR"
+    CERT_WORK_DIR=""
+    trap - EXIT
 }
 
 main() {
+    parse_arguments "$@"
     require_root
+    configure_node_identity
     ensure_service_account
     verify_install_target
     verify_dependencies
     install_system_dependencies
-    prompt_cluster_role
     if ! load_existing_credentials; then
         prompt_db_password
         prompt_replication_password
